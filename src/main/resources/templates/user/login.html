@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout" layout:decorator="layout">
+<head>
+<title>Login</title>
+</head>
+<body>
+    <div layout:fragment="container">
+
+
+            <h2 class="form-signin-heading">Please sign in</h2>
+            <input class="hidden" type="text" id="orginurl" th:value="${orginurl}">
+            <input type="text" id="inputusername" name="username" class="form-control top" placeholder="Email" required="required" autofocus="autofocus"/>
+            <input type="password" id="inputpassword" name="password" class="form-control bottom" placeholder="Password" required="required"/>
+            <button class="btn btn-lg btn-primary btn-block" onclick="login()">Sign in</button>
+            <!--<a th:href="@{/user/register}" class="btn btn-lg btn-primary btn-block" role="button">Register</a>-->
+    </div>
+</body>
+</html>
