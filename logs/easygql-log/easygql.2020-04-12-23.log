@@ -1,0 +1,8 @@
+2020-04-12 23:35:48.368 [main] [34mINFO [0;39m com.easygql.GraphqlSpringBootApplication - Starting GraphqlSpringBootApplication v1.0-SNAPSHOT on 13d6e5cb0a6f with PID 1 (/app.jar started by root in /)
+2020-04-12 23:35:48.390 [main] [34mINFO [0;39m com.easygql.GraphqlSpringBootApplication - No active profile set, falling back to default profiles: default
+2020-04-12 23:35:51.322 [main] [34mINFO [0;39m com.easygql.service.EasyGQLInitator - Loading ThirdAPIS...
+2020-04-12 23:35:51.420 [main] [34mINFO [0;39m com.easygql.service.EasyGQLInitator - {"logType":"I10005","message":"Load Third API"}
+2020-04-12 23:35:51.435 [main] [34mINFO [0;39m com.easygql.service.EasyGQLInitator - {"logType":"I10006","message":"Load DataBase Generator"}
+2020-04-12 23:35:54.860 [main] [31mWARN [0;39m org.thymeleaf.templatemode.TemplateMode - [THYMELEAF][main] Template Mode 'HTML5' is deprecated. Using Template Mode 'HTML' instead.
+2020-04-12 23:35:56.273 [main] [34mINFO [0;39m o.s.boot.web.embedded.netty.NettyWebServer - Netty started on port(s): 9995
+2020-04-12 23:35:56.279 [main] [34mINFO [0;39m com.easygql.GraphqlSpringBootApplication - Started GraphqlSpringBootApplication in 9.149 seconds (JVM running for 10.991)

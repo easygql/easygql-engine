@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://thymeleaf.org/thymeleaf-extras-springsecurity4">
+<head lang="en">
+
+    <!-- 	xmlns:sec="http://thymeleaf.org/extras/springsecurity" -->
+    <!-- 	xmlns:sec="http://www.ultraq.net.nz/thymeleaf-extras-springsecurity4" -->
+    <title>For a better world.</title>
+    <meta name="description" content="" layout:fragment="meta-desc"/>
+    <meta name="keywords" content="" layout:fragment="meta-keywords"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <link href="/webjars/bootstrap/3.3.7-1/css/bootstrap.min.css" rel="stylesheet" media="screen"/>
+    <link href="../../css/layout.css" th:href="@{/css/layout.css}"
+          rel="stylesheet" media="screen"/>
+    <link rel="stylesheet" href="/webjars/bootstrap-table/" th:href="@{/css/bootstrap-editable.css}" media="screen"/>
+    <link rel="stylesheet" href="../../css/font-awesome.min.css" th:href="@{/css/font-awesome.min.css}" media="screen"/>
+    <link rel="stylesheet" href="../../css/ionicons.min.css" th:href="@{/css/ionicons.min.css}" media="screen"/>
+    <link rel="stylesheet" href="../../css/dataTables.bootstrap.css" th:href="@{/css/dataTables.bootstrap.css}" media="screen"/>
+    <link rel="stylesheet" href="../../css/AdminLTE.min.css" th:href="@{/css/AdminLTE.min.css}" media="screen"/>
+    <link rel="stylesheet" href="../../css/_all-skins.min.css" th:href="@{/css/_all-skins.min.css}" media="screen"/>
+    <script src="/webjars/jquery/jquery.min.js"></script>
+    <script src="/webjars/bootstrap/js/bootstrap.min.js"></script>
+    <link href="/webjars/bootstrap-table/bootstrap-table.min.css" rel="stylesheet">
+    <script src="/webjars/bootstrap-table/bootstrap-table.min.js"></script>
+    <script src="/webjars/bootstrap-select/1.13.3/js/bootstrap-select.js"></script>
+    <script src="/js/gateway.js"></script>
+    <script src="/js/urlcode.js"></script>
+
+
+    <!--      Lets do something crazy, lets try to create a template without javascript in 2016!!!!!1111elf!!! -->
+    <!--     <script th:src="@{/js/bootstrap.min.js}"></script> -->
+</head>
+<body>
+
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed"
+                    data-toggle="collapse" data-target="#navbar" aria-expanded="false"
+                    aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span> <span
+                    class="icon-bar"></span> <span class="icon-bar"></span> <span
+                    class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">EasyGQL Service</a>
+        </div>
+
+        <div sec:authorize="!isAnonymous()" class="pull-right">
+            <nav>
+
+                <!--<ul>-->
+                    <!--<li><a href="/">Menu</a>-->
+                        <!--<ul>-->
+                            <!--<li><a th:href="@{/schema/list}">SchemaQuery Management</a></li>-->
+                            <!--<li><a th:href="@{/user/edit}">User Management</a></li>-->
+                            <!--&lt;!&ndash; 								<li><a th:href="@{/user/edit/{userid}(userid=${currentUser.username})}">Profil</a></li> &ndash;&gt;-->
+                            <!--<li><a th:href="@{/logout}">Log out</a></li>-->
+                        <!--</ul>-->
+                    <!--</li>-->
+                <!--</ul>-->
+            </nav>
+
+        </div>
+
+        <!--<div sec:authorize="isAnonymous()">-->
+            <!--<div id="navbar" class="navbar-collapse collapse">-->
+                <!--<form class="navbar-form navbar-right" th:action="@{/login}"-->
+                      <!--method="post">-->
+                    <!--<div class="form-group">-->
+                        <!--<input type="text" placeholder="Username" class="form-control"-->
+                               <!--name="username"></input>-->
+                    <!--</div>-->
+                    <!--<div class="form-group">-->
+                        <!--<input type="password" placeholder="Password" name="password"-->
+                               <!--class="form-control"></input>-->
+                    <!--</div>-->
+                    <!--<button type="submit" class="btn btn-success">Sign in</button>-->
+                <!--</form>-->
+            <!--</div>-->
+        <!--</div>-->
+    </div>
+</nav>
+
+<div class="container" layout:fragment="container"></div>
+
+
+<footer class="footer">
+    <div class="container">
+        <a href="/about">About</a>
+        <a href="/dataprivacypolicy">Data Privacy Policy</a>
+    </div>
+</footer>
+
+</body>
+</html>
