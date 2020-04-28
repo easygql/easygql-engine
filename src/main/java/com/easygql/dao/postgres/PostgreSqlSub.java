@@ -204,23 +204,34 @@ public class PostgreSqlSub implements DataSub {
                                                 if (subQueryHandler.succeeded()) {
                                                   connection.notificationHandler(
                                                       pgNotification -> {
-                                                        String eventID =
-                                                            pgNotification.getPayload();
-                                                        getPayLoad(eventID, objectName, schemaData)
-                                                            .whenComplete(
-                                                                (event, eventEx) -> {
-                                                                  if (null != eventEx) {
-                                                                    if (log.isErrorEnabled()) {
-                                                                      log.error(
-                                                                          "{}",
-                                                                          LogData.getErrorLog(
-                                                                              "E10094", null,
-                                                                              eventEx));
+                                                        JSONArray arrayInfo =
+                                                            JSONArray.parseArray(
+                                                                pgNotification.getPayload());
+                                                        if (arrayInfo.size() > 1) {
+                                                          JsonArray jsonArray = new JsonArray();
+                                                          jsonArray.add(arrayInfo.getString(1));
+                                                          jsonArray.add(arrayInfo.get(2));
+                                                          jsonArray.add(arrayInfo.get(3));
+                                                          emitter.onNext(jsonArray);
+                                                        } else {
+                                                          String eventID = arrayInfo.getString(0);
+                                                          getPayLoad(
+                                                                  eventID, objectName, schemaData)
+                                                              .whenComplete(
+                                                                  (payload, payloadEx) -> {
+                                                                    if (null != payloadEx) {
+                                                                      if (log.isErrorEnabled()) {
+                                                                        log.error(
+                                                                            "{}",
+                                                                            LogData.getErrorLog(
+                                                                                "E10094", null,
+                                                                                payloadEx));
+                                                                      }
+                                                                    } else {
+                                                                      emitter.onNext(payload);
                                                                     }
-                                                                  } else {
-                                                                    emitter.onNext(event);
-                                                                  }
-                                                                });
+                                                                  });
+                                                        }
                                                       });
                                                   subscriberHashMap.put(changeFeedName, connection);
                                                 } else {
@@ -289,6 +300,17 @@ public class PostgreSqlSub implements DataSub {
       selectFields = new ArrayList<>();
       selectFields.addAll(objectTypeMetaData.getScalarFieldData().keySet());
       selectFields.addAll(objectTypeMetaData.getEnumFieldData().keySet());
+      for (RelationField relationField : objectTypeMetaData.getFromRelationFieldData().values()) {
+              if(relationField.getRelationtype().equals(GRAPHQL_MANY2ONE_NAME)) {
+                  selectFields.add(relationField.getFromfield());
+              }
+      }
+      for (RelationField relationField:objectTypeMetaData.getToRelationFieldData().values()) {
+          if(relationField.getRelationtype().equals(GRAPHQL_ONE2MANY_NAME)||relationField.getRelationtype().equals(GRAPHQL_ONE2ONE_NAME)) {
+          selectFields.add(relationField.getTofield());
+          }
+      }
+
     }
     for (String fieldName : selectFields) {
       String fieldType = objectTypeMetaData.getFields().get(fieldName);
@@ -355,7 +377,7 @@ public class PostgreSqlSub implements DataSub {
                         + str);
               }
 
-            } else {
+            } else if(fieldType.equals(GRAPHQL_ENUMFIELD_TYPENAME)) {
               EnumField enumField = objectTypeMetaData.getEnumFieldData().get(str);
               if (enumField.isIslist()) {
                 keys.add(
@@ -376,6 +398,14 @@ public class PostgreSqlSub implements DataSub {
                         + POSTGRES_COLUMNNAME_PREFIX
                         + str);
               }
+            } else {
+                keys.add(
+                        " OLD."
+                                + POSTGRES_COLUMNNAME_PREFIX
+                                + str
+                                + "=NEW."
+                                + POSTGRES_COLUMNNAME_PREFIX
+                                + str);
             }
             xKeys.add("\"" + POSTGRES_COLUMNNAME_PREFIX + str + "\"");
           });

@@ -61,6 +61,7 @@ public class PostgreSqlSchema implements SchemaDao {
           + "      result := result | (seq_id);\n"
           + "  END;\n"
           + "$$ LANGUAGE PLPGSQL; ";
+  private static  final String triggerHisTable = " create table trigger_his ( f_id varchar PRIMARY KEY, f_trigger varchar , f_oldval varchar, f_newval varchar, f_eventtype varchar,f_issucceed boolean,f_lastupdate timestamp default current_timestamp );";
 
   @Override
   public CompletableFuture<Boolean> schemaInitial(SchemaData schemadata) {
@@ -287,6 +288,7 @@ public class PostgreSqlSchema implements SchemaDao {
                                 }
                               }
                               tableSQLBuilder.append(constraintSQLBuilder);
+                              tableSQLBuilder.append(triggerHisTable);
                               final String sqlFinal = tableSQLBuilder.toString();
                               connection.query(
                                   sqlFinal,
@@ -305,7 +307,7 @@ public class PostgreSqlSchema implements SchemaDao {
                                         log.error(
                                             "{}",
                                             LogData.getErrorLog(
-                                                "E10095", errorLog, handler.cause()));
+                                                "E10095", errorLog, tableCreateHandler.cause()));
                                       }
                                       result.complete(false);
                                     }

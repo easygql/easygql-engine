@@ -55,6 +55,7 @@ ConfigurationProperties  {
     public static final String POSTGRES_DATABASENAME_PREFIX = "d_";
     public static final String POSTGRES_TABLENAME_PREFIX = "t_";
     public static final String POSTGRES_ID_FIELD = "id";
+    public static final String POSTGRES_TRIGGERHIS="trigger_his";
     public static final String GRAPHQL_FIELDS_FIELDNAME="fields";
     public static final String GRAPHQL_TYPE_FIELDNAME="type";
     public static final String GRAPHQL_NOTNULL_FIELDNAME="notnull";

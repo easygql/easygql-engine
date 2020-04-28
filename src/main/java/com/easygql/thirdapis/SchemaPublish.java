@@ -292,8 +292,7 @@ public class SchemaPublish extends ThirdAPI {
                                                         GRAPHQL_CONFLICT_REPLACE,
                                                         null);
                                                   }
-                                                  SchemaStart.startSchema(
-                                                      publishedSchemaData, schemaID);
+                                                  SchemaStart.startSchema(schemaID);
                                                 }
                                               });
                                     }

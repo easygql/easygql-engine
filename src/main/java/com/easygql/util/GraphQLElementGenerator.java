@@ -1678,6 +1678,7 @@ public class GraphQLElementGenerator {
             GraphQLInputObjectField.newInputObjectField()
                 .name(GRAPHQL_FILTER_NE_OPERATOR)
                 .type(GraphQLTypeReference.typeRef(enumType.getName())))
+            .field(GraphQLInputObjectField.newInputObjectField().name(GRAPHQL_FILTER_IN_OPERATOR).type(GraphQLList.list(GraphQLTypeReference.typeRef(enumType.getName()))))
         .withDirective(getEnumFilterDirective(enumType));
     return enumFilter.build();
   }

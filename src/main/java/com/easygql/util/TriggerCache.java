@@ -1,6 +1,5 @@
 package com.easygql.util;
 
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.easygql.dao.DataSelecter;
 import com.easygql.dao.postgres.PostgreSqlTriggerDao;
@@ -9,6 +8,7 @@ import io.reactivex.Flowable;
 import io.reactivex.Observable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
+import io.vertx.core.json.JsonArray;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+
 import static com.easygql.component.ConfigurationProperties.*;
 import static com.easygql.util.EasyGqlUtil.getNowTimeStamp;
 
@@ -29,7 +30,6 @@ public class TriggerCache {
   private static HashMap schemaFilter = new HashMap();
   private static HashMap schemaSelection = new HashMap();
   private static DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
   public void init() {
     HashMap eqHashMap = new HashMap();
     eqHashMap.put(GRAPHQL_FILTER_EQ_OPERATOR, SCHEMA_STATUS_RUNNING);
@@ -49,7 +49,6 @@ public class TriggerCache {
     triggerSelection.put(GRAPHQL_PAYLOADFORMATTER_FIELDNAME, 1);
     triggerSelection.put(GRAPHQL_PAYLOADARGS_FIELDNAME, 1);
     triggerSelection.put(GRAPHQL_RETRY_TIMES_FIELDNAME, 1);
-    triggerSelection.put(GRAPHQL_WATCHFIELDS_FIELDNAME, 1);
     triggerSelection.put(GRAPHQL_WEBHOOK_URL_FIELDNAME, 1);
     triggerSelection.put(GRAPHQL_EXPIREDATE_FIELDNAME, 1);
     triggerSelection.put(GRAPHQL_STARTDATE_FIELDNAME, 1);
@@ -157,12 +156,17 @@ public class TriggerCache {
                     new Consumer<Object>() {
                       @Override
                       public void accept(Object obj) throws Exception {
-                        JSONArray jsonArray = (JSONArray) obj;
-                        String action = String.valueOf(jsonArray.get(0)).toLowerCase();
-                        List<String> eventTypeList = new ArrayList<>();
-                        if (eventTypeList.contains(action)) {
-                          JSONObject new_val = jsonArray.getJSONObject(1);
-                          JSONObject old_val = jsonArray.getJSONObject(2);
+                        try {
+                          JsonArray jsonArray = (JsonArray) obj;
+                          String action = String.valueOf(jsonArray.getString(0)).toLowerCase();
+                          JSONObject new_val = null;
+                          JSONObject old_val = null;
+                          if(null!=jsonArray.getJsonObject(1)) {
+                            new_val = JSONObject.parseObject(jsonArray.getJsonObject(1).toString());
+                          }
+                          if(null!=jsonArray.getJsonObject(2)){
+                            old_val = JSONObject.parseObject(jsonArray.getJsonObject(2).toString());
+                          }
                           Trigger tmpNewTrigger = new Trigger();
                           if (SUBSCRIPTION_TYPE_INSERT.equals(action)) {
                             String triggerID = new_val.getString(GRAPHQL_ID_FIELDNAME);
@@ -174,38 +178,38 @@ public class TriggerCache {
                             HashMap triggerHeaderMap = new HashMap();
                             if (null != new_val.getJSONObject(GRAPHQL_HEADERS_FIELDNAME)) {
                               triggerHeaderMap.putAll(
-                                  new_val.getJSONObject(GRAPHQL_HEADERS_FIELDNAME).getInnerMap());
+                                      new_val.getJSONObject(GRAPHQL_HEADERS_FIELDNAME).getInnerMap());
                             }
                             tmpNewTrigger.setHeaders(triggerHeaderMap);
                             List<String> eventList = new ArrayList<>();
                             if (null != new_val.getJSONArray(GRAPHQL_EVENTTYPE_FIELDNAME)) {
                               eventList.addAll(
-                                  new_val
-                                      .getJSONArray(GRAPHQL_EVENTTYPE_FIELDNAME)
-                                      .toJavaList(String.class));
+                                      new_val
+                                              .getJSONArray(GRAPHQL_EVENTTYPE_FIELDNAME)
+                                              .toJavaList(String.class));
                             }
                             tmpNewTrigger.setEventtype(eventList);
                             String payloadFormatter =
-                                new_val.getString(GRAPHQL_PAYLOADFORMATTER_FIELDNAME);
+                                    new_val.getString(GRAPHQL_PAYLOADFORMATTER_FIELDNAME);
                             tmpNewTrigger.setPayloadformatter(payloadFormatter);
                             List<String> payLoadArgs = new ArrayList<>();
                             if (null != new_val.getJSONArray(GRAPHQL_PAYLOADARGS_FIELDNAME)) {
                               payLoadArgs.addAll(
-                                  new_val
-                                      .getJSONArray(GRAPHQL_PAYLOADARGS_FIELDNAME)
-                                      .toJavaList(String.class));
+                                      new_val
+                                              .getJSONArray(GRAPHQL_PAYLOADARGS_FIELDNAME)
+                                              .toJavaList(String.class));
                             }
                             tmpNewTrigger.setPayloadargs(payLoadArgs);
                             tmpNewTrigger.setOk_status(
-                                new_val.getString(GRAPHQL_OK_STATUS_FIELDNAME));
+                                    new_val.getString(GRAPHQL_OK_STATUS_FIELDNAME));
                             Integer retryTimes = new_val.getInteger(GRAPHQL_RETRY_TIMES_FIELDNAME);
                             tmpNewTrigger.setRetry_times(retryTimes);
                             tmpNewTrigger.setWebhookurl(
-                                new_val.getString(GRAPHQL_WEBHOOK_URL_FIELDNAME));
+                                    new_val.getString(GRAPHQL_WEBHOOK_URL_FIELDNAME));
                             tmpNewTrigger.setExpiredate(
-                                new_val.getString(GRAPHQL_EXPIREDATE_FIELDNAME));
+                                    new_val.getString(GRAPHQL_EXPIREDATE_FIELDNAME));
                             tmpNewTrigger.setStartdate(
-                                new_val.getString(GRAPHQL_STARTDATE_FIELDNAME));
+                                    new_val.getString(GRAPHQL_STARTDATE_FIELDNAME));
                             String tmpSchemaID = new_val.getString(GRAPHQL_SCHEMAID_FIELDNAME);
                             LocalDate startTimeDate = null;
                             LocalDate expireTimeDate = null;
@@ -214,12 +218,12 @@ public class TriggerCache {
                             } catch (Exception e) {
                               if (log.isErrorEnabled()) {
                                 log.error(
-                                    "{}",
-                                    LogData.getErrorLog(
-                                        "E10078",
-                                        JSONObject.parseObject(
-                                            JSONObject.toJSONString(tmpNewTrigger)),
-                                        e));
+                                        "{}",
+                                        LogData.getErrorLog(
+                                                "E10078",
+                                                JSONObject.parseObject(
+                                                        JSONObject.toJSONString(tmpNewTrigger)),
+                                                e));
                               }
                             }
                             try {
@@ -230,24 +234,24 @@ public class TriggerCache {
                               }
                             }
                             if(null==activeTriggerMap.get(tmpSchemaID)) {
-                                activeTriggerMap.put(tmpSchemaID,new HashMap<>());
+                              activeTriggerMap.put(tmpSchemaID,new HashMap<>());
                             }
-                            if(null!= allTriggerMap.get(tmpSchemaID)) {
-                                allTriggerMap.put(tmpSchemaID,new HashMap<>());
+                            if(null== allTriggerMap.get(tmpSchemaID)) {
+                              allTriggerMap.put(tmpSchemaID,new HashMap<>());
                             }
                             if (null != startTimeDate && null != expireTimeDate) {
                               LocalDate now = LocalDate.now();
                               if (!startTimeDate.isAfter(now) && !expireTimeDate.isBefore(now)) {
-                                  if(null!=GraphQLCache.getEasyGQL(tmpSchemaID)&&null!=GraphQLCache.getEasyGQL(tmpSchemaID).getSchemaData().getObjectMetaData().get(tmpTypeName)) {
-                                      if(null==activeTriggerMap.get(tmpSchemaID).get(tmpTypeName)) {
-                                          activeTriggerMap.get(tmpSchemaID).put(tmpTypeName,new HashMap<>());
-                                      }
-                                      activeTriggerMap.get(tmpSchemaID).get(tmpTypeName).put(tmpNewTrigger.getId(),tmpNewTrigger);
-                                      addTrigger(tmpSchemaID, GraphQLCache.getEasyGQL(tmpSchemaID).getSchemaData(), tmpNewTrigger);
+                                if(GraphQLCache.ifContain(tmpSchemaID)&&null!=GraphQLCache.getEasyGQL(tmpSchemaID).getSchemaData().getObjectMetaData().get(tmpTypeName)) {
+                                  if(null==activeTriggerMap.get(tmpSchemaID).get(tmpTypeName)) {
+                                    activeTriggerMap.get(tmpSchemaID).put(tmpTypeName,new HashMap<>());
                                   }
+                                  activeTriggerMap.get(tmpSchemaID).get(tmpTypeName).put(tmpNewTrigger.getId(),tmpNewTrigger);
+                                  addTrigger(tmpSchemaID, GraphQLCache.getEasyGQL(tmpSchemaID).getSchemaData(), tmpNewTrigger);
+                                }
                               }
-                              if(null!=allTriggerMap.get(tmpSchemaID).get(tmpTypeName)) {
-                                  allTriggerMap.get(tmpSchemaID).put(tmpTypeName,new HashMap<>());
+                              if(null==allTriggerMap.get(tmpSchemaID).get(tmpTypeName)) {
+                                allTriggerMap.get(tmpSchemaID).put(tmpTypeName,new HashMap<>());
                               }
                               allTriggerMap.get(tmpSchemaID).get(tmpTypeName).put(tmpNewTrigger.getId(),tmpNewTrigger);
                             }
@@ -261,45 +265,51 @@ public class TriggerCache {
                             HashMap triggerHeaderMap = new HashMap();
                             if (null != new_val.getJSONObject(GRAPHQL_HEADERS_FIELDNAME)) {
                               triggerHeaderMap.putAll(
-                                  new_val.getJSONObject(GRAPHQL_HEADERS_FIELDNAME).getInnerMap());
+                                      new_val.getJSONObject(GRAPHQL_HEADERS_FIELDNAME).getInnerMap());
                             }
                             tmpNewTrigger.setHeaders(triggerHeaderMap);
                             List<String> eventList = new ArrayList<>();
                             if (null != new_val.getJSONArray(GRAPHQL_EVENTTYPE_FIELDNAME)) {
                               eventList.addAll(
-                                  new_val
-                                      .getJSONArray(GRAPHQL_EVENTTYPE_FIELDNAME)
-                                      .toJavaList(String.class));
+                                      new_val
+                                              .getJSONArray(GRAPHQL_EVENTTYPE_FIELDNAME)
+                                              .toJavaList(String.class));
                             }
                             tmpNewTrigger.setEventtype(eventList);
                             String payloadFormatter =
-                                new_val.getString(GRAPHQL_PAYLOADFORMATTER_FIELDNAME);
+                                    new_val.getString(GRAPHQL_PAYLOADFORMATTER_FIELDNAME);
                             tmpNewTrigger.setPayloadformatter(payloadFormatter);
                             List<String> payLoadArgs = new ArrayList<>();
                             if (null != new_val.getJSONArray(GRAPHQL_PAYLOADARGS_FIELDNAME)) {
                               payLoadArgs.addAll(
-                                  new_val
-                                      .getJSONArray(GRAPHQL_PAYLOADARGS_FIELDNAME)
-                                      .toJavaList(String.class));
+                                      new_val
+                                              .getJSONArray(GRAPHQL_PAYLOADARGS_FIELDNAME)
+                                              .toJavaList(String.class));
                             }
                             tmpNewTrigger.setPayloadargs(payLoadArgs);
                             tmpNewTrigger.setOk_status(
-                                new_val.getString(GRAPHQL_OK_STATUS_FIELDNAME));
+                                    new_val.getString(GRAPHQL_OK_STATUS_FIELDNAME));
                             Integer retryTimes = new_val.getInteger(GRAPHQL_RETRY_TIMES_FIELDNAME);
                             tmpNewTrigger.setRetry_times(retryTimes);
                             List<String> watchFieldsList = new ArrayList<>();
                             if (null == new_val.getJSONArray(GRAPHQL_WATCHFIELDS_FIELDNAME)) {
                               watchFieldsList.addAll(
-                                  new_val
-                                      .getJSONArray(GRAPHQL_WATCHFIELDS_FIELDNAME)
-                                      .toJavaList(String.class));
+                                      new_val
+                                              .getJSONArray(GRAPHQL_WATCHFIELDS_FIELDNAME)
+                                              .toJavaList(String.class));
                             }
                             tmpNewTrigger.setWebhookurl(
-                                new_val.getString(GRAPHQL_WEBHOOK_URL_FIELDNAME));
+                                    new_val.getString(GRAPHQL_WEBHOOK_URL_FIELDNAME));
                             tmpNewTrigger.setExpiredate(
-                                new_val.getString(GRAPHQL_EXPIREDATE_FIELDNAME));
+                                    new_val.getString(GRAPHQL_EXPIREDATE_FIELDNAME));
                             tmpNewTrigger.setStartdate(
-                                new_val.getString(GRAPHQL_STARTDATE_FIELDNAME));
+                                    new_val.getString(GRAPHQL_STARTDATE_FIELDNAME));
+                          }
+                        } catch (Exception e) {
+                          if(log.isErrorEnabled()) {
+                            HashMap errorMap = new HashMap();
+                            errorMap.put(GRAPHQL_EVENT_ARGUMENT,obj);
+                            log.error("{}",LogData.getErrorLog("E10097",errorMap,e));
                           }
                         }
                       }
@@ -338,17 +348,27 @@ public class TriggerCache {
             changeFeedMap.put(schemaID, new HashMap<String, Flowable<Object>>());
           }
           String typeName = triggerObj.getTypename();
+          List<String> tmpEventTypeList = triggerObj.getEventtype();
+          List<String> eventTypeList = new ArrayList<>();
+          for (String eventAction :tmpEventTypeList ) {
+              eventTypeList.add(eventAction.toLowerCase());
+          }
           Consumer<Object> mapConsumer =
               new Consumer<Object>() {
                 @Override
                 public void accept(Object obj) throws Exception {
-                  JSONArray jsonArray = (JSONArray) obj;
-                  String action = String.valueOf(jsonArray.get(0)).toLowerCase();
-                  List<String> eventTypeList = new ArrayList<>();
+                  JsonArray jsonArray = (JsonArray) obj;
+                  String action = String.valueOf(jsonArray.getString(0)).toLowerCase();
                   if (eventTypeList.contains(action)) {
                     String returnVal = null;
-                    JSONObject new_val = jsonArray.getJSONObject(1);
-                    JSONObject old_val = jsonArray.getJSONObject(2);
+                    JSONObject new_val = null;
+                    JSONObject old_val = null;
+                    if(null!=jsonArray.getJsonObject(1)) {
+                      new_val = JSONObject.parseObject(jsonArray.getJsonObject(1).toString());
+                    }
+                    if(null!=jsonArray.getJsonObject(2)){
+                      old_val = JSONObject.parseObject(jsonArray.getJsonObject(2).toString());
+                    }
                     if (SUBSCRIPTION_TYPE_INSERT.equals(action)) {
                       returnVal =
                           parsePayLoad(
@@ -375,28 +395,26 @@ public class TriggerCache {
                               old_val);
                     }
                     final String returnValue = returnVal;
+                    JSONObject tmpOldVal = old_val;
+                    JSONObject tmpNewVal = new_val;
                     TriggerSender.sendEvent(returnVal, triggerObj)
                         .whenCompleteAsync(
                             (result, resultEx) -> {
+                              Boolean isSucceed = false;
                               HashMap triggerHistoryMap = new HashMap();
                               triggerHistoryMap.put(GRAPHQL_ID_FIELDNAME, IDTools.getID());
                               triggerHistoryMap.put(GRAPHQL_TRIGGER_FIELDNAME, triggerObj.getId());
                               triggerHistoryMap.put(GRAPHQL_EVENTTYPE_FIELDNAME, action);
-                              triggerHistoryMap.put(VALUETYPE_OLDVALUE, old_val);
-                              triggerHistoryMap.put(VALUETYPE_NEWVALUE, new_val);
+                              triggerHistoryMap.put(VALUETYPE_OLDVALUE, tmpOldVal);
+                              triggerHistoryMap.put(VALUETYPE_NEWVALUE, tmpNewVal);
                               triggerHistoryMap.put(
                                   GRAPHQL_TRIGGER_TIME_FIELDNAME, getNowTimeStamp());
                               triggerHistoryMap.put(GRAPHQL_PAYLOAD_FIELDNAME, returnValue);
-                              if (null != resultEx || !result) {
-                                triggerHistoryMap.put(GRAPHQL_IS_SUCCEED_FIELDNAME, false);
-                              } else {
-                                triggerHistoryMap.put(GRAPHQL_IS_SUCCEED_FIELDNAME, true);
+                              if (null == resultEx && result) {
+                                isSucceed=true;
                               }
                               GraphQLCache.getEasyGQL(schemaID)
-                                  .getObjectDaoMap()
-                                  .get(GRAPHQL_TRIGGER_HISTORY_TYPENAME)
-                                  .getDatainserter()
-                                  .insertDoc(triggerHistoryMap, GRAPHQL_CONFLICT_REPLACE, null);
+                                      .getTriggerDao().AddTriggerEvent(triggerObj.getId(),action,tmpOldVal,tmpNewVal,isSucceed);
                             });
                   }
                 }

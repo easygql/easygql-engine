@@ -369,7 +369,6 @@ public class PostgreSqlSelecter implements DataSelecter {
           HashMap fieldFinalObj = HashMap.class.cast(fieldFilterObj.get(fieldStr));
           Iterator operatorIterator = fieldFinalObj.keySet().iterator();
           String fieldType = objectTypeMetaData.getFields().get(fieldStr);
-          String fieldTypeName = objectTypeMetaData.getScalarFieldData().get(fieldStr).getType();
           if (fieldType.equals(GRAPHQL_FROMRELATION_TYPENAME)) {
             RelationField relationField =
                 objectTypeMetaData.getFromRelationFieldData().get(fieldStr);
@@ -568,8 +567,38 @@ public class PostgreSqlSelecter implements DataSelecter {
               }
             }
           } else if (fieldType.equals(GRAPHQL_ENUMTYPE_TYPENAME)) {
+            EnumField enumField= objectTypeMetaData.getEnumFieldData().get(fieldStr);
+            String fieldTypeName = enumField.getType();
+            EnumTypeMetaData enumTypeMetaData = schemaData.getEnuminfo().get(fieldTypeName);
+            String operator = String.class.cast(operatorIterator.next());
+            if(enumField.isIslist()) {
+              if(operator.equals(GRAPHQL_FILTER_CONTAIN_OPERATOR)) {
+
+              }
+            } else {
+              if(operator.equals(GRAPHQL_FILTER_EQ_OPERATOR)) {
+                queryStr.append(" ").append(POSTGRES_COLUMNNAME_PREFIX).append(fieldStr);
+                queryStr.append(" = '").append(fieldFinalObj.get(operator)).append("'");
+              } else if(operator.equals(GRAPHQL_FILTER_NE_OPERATOR)) {
+                queryStr.append(" ").append(POSTGRES_COLUMNNAME_PREFIX).append(fieldStr);
+                queryStr.append(" != '").append(fieldFinalObj.get(operator)).append("'");
+              } else if(operator.equals(GRAPHQL_FILTER_IN_OPERATOR)) {
+                queryStr.append(" ").append(POSTGRES_COLUMNNAME_PREFIX).append(fieldStr);
+                List l = List.class.cast(fieldFinalObj.get(operator));
+                queryStr.append(" in (");
+                for (int loc = 0; loc < l.size(); loc++) {
+                  if (loc != 0) {
+                    queryStr.append(",");
+                  }
+                  queryStr.append("'").append(String.class.cast(l.get(loc))).append("'");
+                }
+                queryStr.append("))");
+              }
+            }
+
 
           } else {
+            String fieldTypeName = objectTypeMetaData.getScalarFieldData().get(fieldStr).getType();
             ScalarFieldInfo scalarFieldInfo = objectTypeMetaData.getScalarFieldData().get(fieldStr);
             while (operatorIterator.hasNext()) {
               String operator = String.class.cast(operatorIterator.next());

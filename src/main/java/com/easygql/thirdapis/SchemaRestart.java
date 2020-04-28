@@ -1,17 +1,19 @@
 package com.easygql.thirdapis;
 
-import com.alibaba.fastjson.JSONObject;
 import com.easygql.annotation.EasyGQLThirdAPI;
 import com.easygql.dao.DataSelecter;
 import com.easygql.exception.BusinessException;
-import com.easygql.component.SchemaService;
-import com.easygql.util.*;
+import com.easygql.util.GraphQLCache;
+import com.easygql.util.LogData;
+import com.easygql.util.ThirdAPIField;
+import com.easygql.util.ThirdAPIInput;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
 
 import static com.easygql.component.ConfigurationProperties.*;
+import static com.easygql.thirdapis.SchemaStart.startSchema;
 
 @EasyGQLThirdAPI("SchemaRestart")
 @Slf4j
@@ -67,10 +69,7 @@ public class SchemaRestart extends ThirdAPI {
                                                 if (null == schemaDataJson) {
                                                     future.completeExceptionally(new BusinessException("E10088"));
                                                 } else {
-                                                    SchemaData schemaData =
-                                                            JSONObject.parseObject(
-                                                                    JSONObject.toJSONString(schemaDataJson), SchemaData.class);
-                                                    SchemaStart.startSchema(schemaData, schemaID)
+                                                    startSchema(schemaID)
                                                             .whenComplete(
                                                                     (startResult, startEx) -> {
                                                                         if (null != startEx) {

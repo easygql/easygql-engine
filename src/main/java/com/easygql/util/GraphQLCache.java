@@ -1,6 +1,5 @@
 package com.easygql.util;
 
-import com.alibaba.fastjson.JSONObject;
 import com.easygql.dao.DataSelecter;
 import com.easygql.exception.BusinessException;
 import com.easygql.thirdapis.SchemaStart;
@@ -15,14 +14,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static com.easygql.component.ConfigurationProperties.*;
 
-/** @Author: fenyorome
- *  @Date: 2019/1/2/002 21:01
- *  */
+/** @Author: fenyorome @Date: 2019/1/2/002 21:01 */
 @Slf4j
 public class GraphQLCache {
   private static ConcurrentHashMap<String, EasyGQL> graphqlCache =
       new ConcurrentHashMap<String, EasyGQL>();
-  private static ConcurrentHashMap<String,List<CompletableFuture<GraphQL>>> pendingCache = new ConcurrentHashMap<>();
+  private static ConcurrentHashMap<String, List<CompletableFuture<GraphQL>>> pendingCache =
+      new ConcurrentHashMap<>();
   private static HashMap publishedSchemaSelecter = new HashMap();
   private static DataSelecter schemaSelecter = null;
 
@@ -70,60 +68,30 @@ public class GraphQLCache {
             }
           } else {
             try {
-              List<CompletableFuture<GraphQL>> tmpList =pendingCache.putIfAbsent(schemaID,new ArrayList<>());
-              if(null == tmpList) {
+              List<CompletableFuture<GraphQL>> tmpList =
+                  pendingCache.putIfAbsent(schemaID, new ArrayList<>());
+              if (null == tmpList) {
                 pendingCache.get(schemaID).add(future);
-                HashMap eqMap = new HashMap();
-                eqMap.put(GRAPHQL_FILTER_EQ_OPERATOR,schemaID);
-                HashMap idMap = new HashMap();
-                idMap.put(GRAPHQL_ID_FIELDNAME,eqMap);
-                HashMap filterMap = new HashMap();
-                filterMap.put(GRAPHQL_FILTER_FILTER_OPERATOR,idMap);
-                schemaSelecter
-                        .getSingleDoc(filterMap, publishedSchemaSelecter)
-                        .whenCompleteAsync(
-                                (schemaInfo, ex) -> {
-                                  if (null != ex || null == schemaInfo) {
-                                    future.completeExceptionally(new BusinessException("E10086"));
-                                  } else {
-                                    try {
-                                      HashMap schemaInfoMap = (HashMap) schemaInfo;
-                                      HashMap publishedSchemaInfo =
-                                              (HashMap) schemaInfoMap.get(GRAPHQL_PUBLISHEDSCHEMA_FIELDNAME);
-                                      if (null == publishedSchemaInfo) {
-                                        future.completeExceptionally(new BusinessException("E10087"));
-                                      } else {
-                                        Object schemaDataJson =
-                                                publishedSchemaInfo.get(GRAPHQL_SCHEMAOBJECT_FIELDNAME);
-                                        if (null == schemaDataJson) {
-                                          future.completeExceptionally(new BusinessException("E10088"));
-                                        } else {
-                                          SchemaData schemaData =
-                                                  JSONObject.parseObject(
-                                                          JSONObject.toJSONString(schemaDataJson), SchemaData.class);
-                                          schemaStart
-                                                  .startSchema(schemaData, schemaID)
-                                                  .whenComplete(
-                                                          (result, startEx) -> {
-                                                            if (null != startEx) {
-                                                              List<CompletableFuture<GraphQL>> requestList = pendingCache.remove(schemaID);
-                                                              requestList.forEach(request->{
-                                                                request.completeExceptionally(startEx);
-                                                              });
-                                                            } else {
-                                                              List<CompletableFuture<GraphQL>> requestList = pendingCache.remove(schemaID);
-                                                              requestList.forEach(request->{
-                                                                request.complete(graphqlCache.get(schemaID).getGraphQL());
-                                                              });
-                                                            }
-                                                          });
-                                        }
-                                      }
-                                    } catch (Exception e) {
-                                      future.completeExceptionally(e);
-                                    }
-                                  }
+                schemaStart
+                    .startSchema(schemaID)
+                    .whenComplete(
+                        (result, startEx) -> {
+                          if (null != startEx) {
+                            List<CompletableFuture<GraphQL>> requestList =
+                                pendingCache.remove(schemaID);
+                            requestList.forEach(
+                                request -> {
+                                  request.completeExceptionally(startEx);
                                 });
+                          } else {
+                            List<CompletableFuture<GraphQL>> requestList =
+                                pendingCache.remove(schemaID);
+                            requestList.forEach(
+                                request -> {
+                                  request.complete(graphqlCache.get(schemaID).getGraphQL());
+                                });
+                          }
+                        });
               } else {
                 tmpList.add(future);
               }
@@ -136,18 +104,18 @@ public class GraphQLCache {
   }
 
   public static EasyGQL getEasyGQL(String schemaID) {
-    if(null==graphqlCache.get(schemaID)) {
+    if (null == graphqlCache.get(schemaID)) {
       try {
         getGraphql(schemaID).get();
-      } catch ( Exception e) {
-        if(log.isErrorEnabled()) {
+      } catch (Exception e) {
+        if (log.isErrorEnabled()) {
           HashMap errorMap = new HashMap();
-          errorMap.put(GRAPHQL_SCHEMAID_FIELDNAME,schemaID);
-          log.error("{}",LogData.getErrorLog("E10002",errorMap,e));
+          errorMap.put(GRAPHQL_SCHEMAID_FIELDNAME, schemaID);
+          log.error("{}", LogData.getErrorLog("E10002", errorMap, e));
         }
       }
     }
-   return graphqlCache.get(schemaID);
+    return graphqlCache.get(schemaID);
   }
 
   public static boolean ifContain(String schemaID) {

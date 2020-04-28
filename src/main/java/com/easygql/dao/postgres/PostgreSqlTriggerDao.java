@@ -1,20 +1,26 @@
 package com.easygql.dao.postgres;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.easygql.dao.*;
+import com.easygql.dao.DataSelecter;
+import com.easygql.dao.TriggerDao;
 import com.easygql.exception.BusinessException;
 import com.easygql.service.SubscriptionService;
 import com.easygql.util.*;
 import io.reactivex.ObservableEmitter;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
 import io.vertx.pgclient.PgConnection;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.Tuple;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -36,6 +42,7 @@ public class PostgreSqlTriggerDao implements TriggerDao {
   private static final String deleteEventSQLFormat = " delete from %s where f_date < $1 ";
   private static final String eventSelectSQLFormat = " select f_payload from %s where f_id='%s';";
   private static HashMap<String, PgConnection> subscriberHashMap = new HashMap<>();
+  private static final String triggerHisInsert = " insert into trigger_his(f_id,f_trigger,f_oldval,f_newval,f_eventtype,f_issucceed) values($1,$2,$3,$4,$5,$6)";
 
   private static HashMap<String, Object> triggerSelectFields = new HashMap();
 
@@ -207,7 +214,6 @@ public class PostgreSqlTriggerDao implements TriggerDao {
                                                                           resultMap.get("trigger"),
                                                                           triggerHandler -> {
                                                                               sqlConnection.close();
-
                                                                               if (!triggerHandler.succeeded()) {
                                                                                   future.completeExceptionally(
                                                                                           new BusinessException("E10026"));
@@ -218,7 +224,6 @@ public class PostgreSqlTriggerDao implements TriggerDao {
 
                                                               } else {
                                                                   sqlConnection.close();
-
                                                                   if (log.isErrorEnabled()) {
                                                                       log.error(
                                                                               "{}",
@@ -336,23 +341,34 @@ public class PostgreSqlTriggerDao implements TriggerDao {
                                                                             if (subQueryHandler.succeeded()) {
                                                                                 connection.notificationHandler(
                                                                                         pgNotification -> {
-                                                                                            String eventID =
-                                                                                                    pgNotification.getPayload();
-                                                                                            getPayLoad(eventID, typeName, schemaData)
-                                                                                                    .whenComplete(
-                                                                                                            (payload, payloadEx) -> {
-                                                                                                                if (null != payloadEx) {
-                                                                                                                    if (log.isErrorEnabled()) {
-                                                                                                                        log.error(
-                                                                                                                                "{}",
-                                                                                                                                LogData.getErrorLog(
-                                                                                                                                        "E10094", null,
-                                                                                                                                        payloadEx));
+                                                                                            JSONArray arrayInfo =
+                                                                                                    JSONArray.parseArray(
+                                                                                                            pgNotification.getPayload());
+                                                                                            if (arrayInfo.size() > 1) {
+                                                                                                JsonArray jsonArray = new JsonArray();
+                                                                                                jsonArray.add(arrayInfo.getString(1));
+                                                                                                jsonArray.add(arrayInfo.get(2));
+                                                                                                jsonArray.add(arrayInfo.get(3));
+                                                                                                emitter.onNext(jsonArray);
+                                                                                            } else {
+                                                                                                String eventID = arrayInfo.getString(0);
+                                                                                                getPayLoad(
+                                                                                                        eventID, typeName, schemaData)
+                                                                                                        .whenComplete(
+                                                                                                                (payload, payloadEx) -> {
+                                                                                                                    if (null != payloadEx) {
+                                                                                                                        if (log.isErrorEnabled()) {
+                                                                                                                            log.error(
+                                                                                                                                    "{}",
+                                                                                                                                    LogData.getErrorLog(
+                                                                                                                                            "E10094", null,
+                                                                                                                                            payloadEx));
+                                                                                                                        }
+                                                                                                                    } else {
+                                                                                                                        emitter.onNext(payload);
                                                                                                                     }
-                                                                                                                } else {
-                                                                                                                    emitter.onNext(payload);
-                                                                                                                }
-                                                                                                            });
+                                                                                                                });
+                                                                                            }
                                                                                         });
                                                                                 subscriberHashMap.put(
                                                                                         schemaID + "_" + typeName, connection);
@@ -404,4 +420,49 @@ public class PostgreSqlTriggerDao implements TriggerDao {
         });
     return future;
   }
+
+    @Override
+    public void AddTriggerEvent(String triggerID, String eventType, Map<String, Object> oldVal, Map<String, Object> newVal,Boolean isSucceed) {
+        CompletableFuture.runAsync(()->{
+            try {
+                PostgreSQLPoolCache.getConnectionFactory(schemaData.getSchemaid()).whenCompleteAsync((sqlConnection, throwable) -> {
+                    if(null!=throwable) {
+                        if(log.isErrorEnabled()) {
+                            log.error("{}",LogData.getErrorLog("E10049",new HashMap<>(),throwable));
+                        }
+                    } else {
+                        Tuple tuple = Tuple.tuple();
+                        tuple.addString(IDTools.getID());
+                        tuple.addString(triggerID);
+                        tuple.addString(JSONObject.toJSONString(oldVal));
+                        tuple.addString(JSONObject.toJSONString(newVal));
+                        tuple.addString(eventType);
+                        tuple.addBoolean(isSucceed);
+                        sqlConnection.preparedQuery(triggerHisInsert,tuple,insertHandler->{
+                            if(!insertHandler.succeeded()){
+                                if(log.isErrorEnabled()) {
+                                    HashMap errorMap = new HashMap();
+                                    errorMap.put(GRAPHQL_EVENTTYPE_FIELDNAME,eventType);
+                                    errorMap.put(SUBSCRIPTION_NODE_OLD,oldVal);
+                                    errorMap.put(SUBSCRIPTION_NODE_NEW,newVal);
+                                    errorMap.put(GRAPHQL_TRIGGER_FIELDNAME,triggerID);
+                                    log.error("{}",LogData.getErrorLog("E10102",errorMap,insertHandler.cause()));
+                                }
+                            }
+                            sqlConnection.close();
+                        });
+                    }
+                });
+            } catch (Exception e) {
+                if(log.isErrorEnabled()) {
+                    HashMap errorMap = new HashMap();
+                    errorMap.put(GRAPHQL_EVENTTYPE_FIELDNAME,eventType);
+                    errorMap.put(SUBSCRIPTION_NODE_OLD,oldVal);
+                    errorMap.put(SUBSCRIPTION_NODE_NEW,newVal);
+                    errorMap.put(GRAPHQL_TRIGGER_FIELDNAME,triggerID);
+                    log.error("{}",LogData.getErrorLog("E10102",errorMap,e));
+                }
+            }
+        });
+    }
 }

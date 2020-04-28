@@ -31,6 +31,7 @@ public class SchemaService {
   private SchemaData defaultSchemaData;
   private SchemaStart schemaStart=new SchemaStart();
   private EasyGQLInitator easyGQLInitator=new EasyGQLInitator();
+  private TriggerCache triggerCache=new TriggerCache();
 
   public SchemaService() {}
 
@@ -58,13 +59,14 @@ public class SchemaService {
       }
     }
     try {
-      schemaStart.startSchema(defaultSchemaData, schemaDB).get();
+      schemaStart.startSchema(defaultSchemaData, schemaDB,new ArrayList<>()).get();
       GraphQLCache.init();
     } catch (Exception e) {
       if(log.isErrorEnabled()) {
         log.error("{}",LogData.getErrorLog("E10010",null,e));
       }
     }
+    triggerCache.init();
   }
 
   /** 初始化SchemaDB */
@@ -185,15 +187,6 @@ public class SchemaService {
     triggersField.setToobject(GRAPHQL_TRIGGER_TYPENAME);
     triggersField.setRelationtype(GRAPHQL_ONE2MANY_NAME);
     schemaDBOBJ.getRelations().add(triggersField);
-    RelationField triggerHistoryField  = new RelationField();
-    triggerHistoryField.setId(IDTools.getID());
-    triggerHistoryField.setIfcascade(true);
-    triggerHistoryField.setFromobject(GRAPHQL_SCHEMA_TYPENAME);
-    triggerHistoryField.setFromfield(GRAPHQL_TRIGGER_HISTORY_FIELDNAME);
-    triggerHistoryField.setToobject(GRAPHQL_TRIGGER_HISTORY_TYPENAME);
-    triggerHistoryField.setTofield(GRAPHQL_SCHEMAID_FIELDNAME);
-    triggerHistoryField.setRelationtype(GRAPHQL_ONE2MANY_NAME);
-    schemaDBOBJ.getRelations().add(triggerHistoryField);
     RelationField relationFields = new RelationField();
     relationFields.setId(IDTools.getID());
     relationFields.setFromobject(GRAPHQL_SCHEMA_TYPENAME);
@@ -543,58 +536,6 @@ public class SchemaService {
     trigger_Type.setEnumfields(trigger_EnumList);
     schemaDBOBJ.getObjecttypes().add(trigger_Type);
 
-    //TriggerHistory
-    ObjectTypeInfo triggerHistory = new ObjectTypeInfo();
-    triggerHistory.setId(IDTools.getID());
-    triggerHistory.setName(GRAPHQL_TRIGGER_HISTORY_TYPENAME);
-    triggerHistory.setDescription("触发器历史");
-    triggerHistory.setUnupdatable_roles(allRoleStr);
-    triggerHistory.setUninsertable_roles(allRoleStr);
-    triggerHistory.setUndeletable_roles(allRoleStr);
-    List<ScalarFieldInfo> triggerHistoryScalarTypes = new ArrayList<>();
-    triggerHistoryScalarTypes.add(getIDField());
-    List<EnumField> enumFields = new ArrayList<>();
-    ScalarFieldInfo triggerIDScalarType = new ScalarFieldInfo();
-    triggerIDScalarType.setType(GRAPHQL_ID_TYPENAME);
-    triggerIDScalarType.setDescription("触发器ID");
-    triggerIDScalarType.setName(GRAPHQL_TRIGGER_FIELDNAME);
-    triggerIDScalarType.setNotnull(true);
-    triggerHistoryScalarTypes.add(triggerIDScalarType);
-    EnumField triggerEventType  = new EnumField();
-    triggerEventType.setName(GRAPHQL_EVENTTYPE_FIELDNAME);
-    triggerEventType.setDescription("动作类型");
-    triggerEventType.setType(GRAPHQL_EVENT_TYPENAME);
-    triggerEventType.setNotnull(true);
-    enumFields.add(triggerEventType);
-    ScalarFieldInfo oldValScalarField = new ScalarFieldInfo();
-    oldValScalarField.setName(VALUETYPE_OLDVALUE);
-    oldValScalarField.setType(GRAPHQL_OBJECT_TYPENAME);
-    oldValScalarField.setDescription("旧值");
-    triggerHistoryScalarTypes.add(oldValScalarField);
-    ScalarFieldInfo newValScalarField = new ScalarFieldInfo();
-    newValScalarField.setName(VALUETYPE_NEWVALUE);
-    newValScalarField.setType(GRAPHQL_OBJECT_TYPENAME);
-    newValScalarField.setDescription("新值");
-    triggerHistoryScalarTypes.add(newValScalarField);
-    ScalarFieldInfo triggerTime = new ScalarFieldInfo();
-    triggerTime.setName(GRAPHQL_TRIGGER_TIME_FIELDNAME);
-    triggerTime.setType(GRAPHQL_DATETIME_TYPENAME);
-    triggerTime.setDescription("触发时间");
-    triggerHistoryScalarTypes.add(triggerTime);
-    ScalarFieldInfo triggerPayLoad = new ScalarFieldInfo();
-    triggerPayLoad.setName(GRAPHQL_PAYLOAD_FIELDNAME);
-    triggerPayLoad.setDescription("请求内容");
-    triggerPayLoad.setNotnull(true);
-    triggerPayLoad.setType(GRAPHQL_STRING_TYPENAME);
-    triggerHistoryScalarTypes.add(triggerPayLoad);
-    ScalarFieldInfo triggerIsSucceed= new ScalarFieldInfo();
-    triggerIsSucceed.setName(GRAPHQL_IS_SUCCEED_FIELDNAME);
-    triggerIsSucceed.setType(GRAPHQL_BOOLEAN_TYPENAME);
-    triggerIsSucceed.setDefaultValue("true");
-    triggerHistoryScalarTypes.add(triggerIsSucceed);
-    triggerHistory.setScalarfields(triggerHistoryScalarTypes);
-    triggerHistory.setEnumfields(enumFields);
-    schemaDBOBJ.getObjecttypes().add(triggerHistory);
     // User  Schemadb的用户管理
     ObjectTypeInfo userType = new ObjectTypeInfo();
     userType.setId(GRAPHQL_USERTYPE_ID);

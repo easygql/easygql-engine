@@ -19,4 +19,5 @@ public class SchemaObject {
     private List<ObjectTypeInfo> objecttypes = new ArrayList<>();
     private List<EnumTypeMetaData> enumtypes=new ArrayList<>();
     private List<RelationField> relations = new ArrayList<>();
+    private List<Trigger> triggerInfo = new ArrayList<>();
 }
