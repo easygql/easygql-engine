@@ -298,10 +298,10 @@ public class GraphQLElementGenerator {
     }
     Iterator<Map.Entry<String, EnumField>> enumIterator =
         objectTypeMetaData.getEnumFieldData().entrySet().iterator();
-    while (iterator.hasNext()) {
+    while (enumIterator.hasNext()) {
       Map.Entry<String, EnumField> entry = enumIterator.next();
       EnumField enumField = entry.getValue();
-      if (enumField.isIslist()) {
+      if (!enumField.isIslist()) {
         objectTypeFieldFilterBuilder.field(
             GraphQLInputObjectField.newInputObjectField()
                 .name(enumField.getName())
