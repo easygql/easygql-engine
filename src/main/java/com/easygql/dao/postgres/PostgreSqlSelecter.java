@@ -573,8 +573,19 @@ public class PostgreSqlSelecter implements DataSelecter {
             String operator = String.class.cast(operatorIterator.next());
             if(enumField.isIslist()) {
               if(operator.equals(GRAPHQL_FILTER_CONTAIN_OPERATOR)) {
-
+                  queryStr.append(" @> ");
+              } else if(operator.equals(GRAPHQL_FILTER_IN_OPERATOR)) {
+                queryStr.append(" <@ ");
               }
+              queryStr.append(" in (");
+              List l = List.class.cast(fieldFinalObj.get(operator));
+              for (int loc = 0; loc < l.size(); loc++) {
+                if (loc != 0) {
+                  queryStr.append(",");
+                }
+                queryStr.append("'").append(String.class.cast(l.get(loc))).append("'");
+              }
+              queryStr.append("))");
             } else {
               if(operator.equals(GRAPHQL_FILTER_EQ_OPERATOR)) {
                 queryStr.append(" ").append(POSTGRES_COLUMNNAME_PREFIX).append(fieldStr);
@@ -595,7 +606,6 @@ public class PostgreSqlSelecter implements DataSelecter {
                 queryStr.append("))");
               }
             }
-
 
           } else {
             String fieldTypeName = objectTypeMetaData.getScalarFieldData().get(fieldStr).getType();

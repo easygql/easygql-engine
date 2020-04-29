@@ -409,7 +409,7 @@ public class PostgreSqlSchema implements SchemaDao {
             break;
           case GRAPHQL_OBJECT_TYPENAME:
           case GRAPHQL_JSON_TYPENAME:
-            tableGeneratorSQL.append(" json");
+            tableGeneratorSQL.append(" jsonb");
             break;
           case GRAPHQL_DATETIME_TYPENAME:
             tableGeneratorSQL.append(" timestamp");
@@ -425,7 +425,7 @@ public class PostgreSqlSchema implements SchemaDao {
             throw new BusinessException("E10050");
         }
       } else {
-        tableGeneratorSQL.append(" json ");
+        tableGeneratorSQL.append(" jsonb ");
       }
       tableGeneratorSQL.append(" ");
       if (scalarFieldInfo.isNotnull()) {
@@ -440,7 +440,7 @@ public class PostgreSqlSchema implements SchemaDao {
       location++;
       tableGeneratorSQL.append(POSTGRES_COLUMNNAME_PREFIX).append(enumField.getName()).append(" ");
       if (enumField.isIslist()) {
-        tableGeneratorSQL.append(" json ");
+        tableGeneratorSQL.append(" jsonb ");
       } else {
         tableGeneratorSQL.append(" varchar ");
       }

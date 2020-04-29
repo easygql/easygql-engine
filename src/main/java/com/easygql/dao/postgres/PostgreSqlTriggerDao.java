@@ -36,7 +36,7 @@ public class PostgreSqlTriggerDao implements TriggerDao {
       "SELECT count(*) FROM pg_trigger WHERE tgname = $1 ";
   private static final String listenSql = "listen \"%s\";";
   public static final String eventDataTableFormat =
-      "create table if not EXISTS %s ( f_id varchar not null ,f_payload json not null,f_changefeedname varchar not null,f_datetime  TIMESTAMP not null default NOW()); ";
+      "create table if not EXISTS %s ( f_id varchar not null ,f_payload jsonb not null,f_changefeedname varchar not null,f_datetime  TIMESTAMP not null default NOW()); ";
   public static final String ifEventDataTableFormat =
       " SELECT table_name FROM information_schema.tables WHERE table_schema='public'  and  table_name='%s';";
   private static final String deleteEventSQLFormat = " delete from %s where f_date < $1 ";
