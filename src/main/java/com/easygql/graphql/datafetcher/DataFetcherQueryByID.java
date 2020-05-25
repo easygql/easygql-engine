@@ -54,7 +54,7 @@ public class DataFetcherQueryByID implements EasyGQLDataFetcher<Object> {
             HashMap idCondition = new HashMap();
             idCondition.put(GRAPHQL_ID_FIELDNAME, eqCondition);
             HashMap filterCondtion = new HashMap();
-            filterCondtion.put(GRAPHQL_FILTER_FILTER_OPERATOR, filterCondtion);
+            filterCondtion.put(GRAPHQL_FILTER_FILTER_OPERATOR, idCondition);
             AuthorityUtil.queryPermissionFilterBefore(
                 userInfo, filterCondtion, objectName, schemaData);
             dataSelecter

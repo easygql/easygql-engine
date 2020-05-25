@@ -2,19 +2,19 @@ version: '3.6'
 services:
   easygql_postgresql:
     restart: always
-    image: postgres
+    image: postgres:12.0
     container_name: easygql_postgresql
     volumes:
       - ./easygql_data:/var/lib/postgresql/data postgres
     ports:
     - "5432:5432"
     environment:
-      - POSTGRES_PASSWORD:password
-      - POSTGRES_USER:postgres
-      - TZ:Asia/Shanghai
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: postgres
+      TZ: Asia/Shanghai
   easygql_engine:
       restart: always
-      image: easygql_engine
+      image: fenyorome/easygql-engine
       container_name: easygql_engine
       volumes:
       - ./logs:/logs

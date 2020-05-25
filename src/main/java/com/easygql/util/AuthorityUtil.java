@@ -255,17 +255,13 @@ public class AuthorityUtil {
           if (null != readConstraint) {
             rowConstraints = (HashMap) readConstraint.get(roleInfo);
           }
-          ;
           HashMap condition1 = condition;
           if (null != rowConstraints) {
             HashMap preCondition =
                 transferRowFilter(objectName, userInfo, rowConstraints, schemaData, roleInfo);
             condition1 = mergeCondition(preCondition, condition);
           }
-
-          condition.clear();
-          condition.putAll(condition1);
-          return condition;
+          return condition1;
         });
   }
 

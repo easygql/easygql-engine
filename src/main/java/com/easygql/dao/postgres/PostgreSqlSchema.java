@@ -61,7 +61,7 @@ public class PostgreSqlSchema implements SchemaDao {
           + "      result := result | (seq_id);\n"
           + "  END;\n"
           + "$$ LANGUAGE PLPGSQL; ";
-  private static  final String triggerHisTable = " create table trigger_his ( f_id varchar PRIMARY KEY, f_trigger varchar , f_oldval varchar, f_newval varchar, f_eventtype varchar,f_issucceed boolean,f_lastupdate timestamp default current_timestamp );";
+  private static  final String triggerHisTable = "drop table if exists trigger_his;\n  create table trigger_his ( f_id varchar PRIMARY KEY, f_trigger varchar , f_oldval varchar, f_newval varchar, f_eventtype varchar,f_issucceed boolean,f_lastupdate timestamp default current_timestamp );";
 
   @Override
   public CompletableFuture<Boolean> schemaInitial(SchemaData schemadata) {
@@ -412,11 +412,11 @@ public class PostgreSqlSchema implements SchemaDao {
             tableGeneratorSQL.append(" jsonb");
             break;
           case GRAPHQL_DATETIME_TYPENAME:
-            tableGeneratorSQL.append(" timestamp");
+            tableGeneratorSQL.append(" timestamptz");
             break;
           case GRAPHQL_CREATEDAT_TYPENAME:
           case GRAPHQL_LASTUPDATE_TYPENAME:
-            tableGeneratorSQL.append(" timestamp default current_timestamp");
+            tableGeneratorSQL.append(" timestamptz default current_timestamp");
             break;
           case GRAPHQL_BIGDECIMAL_TYPENAME:
             tableGeneratorSQL.append(" decimal");

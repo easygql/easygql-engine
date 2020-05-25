@@ -3,12 +3,13 @@ package com.easygql.util;
 import com.easygql.exception.BusinessException;
 import lombok.NonNull;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
 import static com.easygql.component.ConfigurationProperties.*;
 import static com.easygql.util.Validator.isValidID;
 
@@ -68,7 +69,7 @@ public class EasyGqlUtil {
      * @param result
      */
     public static void transferIdAndLastUpdate(@NonNull Object doc, @NonNull Map<String, HashMap> result, @NonNull List<String> lastUpdateFields, @NonNull List<String> createAtFields) {
-        String nowTime = getNowTimeStamp();
+        OffsetDateTime nowTime = getNowTimeStamp();
         if (doc instanceof List) {
             List<HashMap> objList = (List) doc;
             Map resultTmp = objList.stream().map(obj -> {
@@ -114,8 +115,8 @@ public class EasyGqlUtil {
         return objMap;
     }
 
-    public static String getNowTimeStamp() {
-        return LocalDateTime.now().format(getInstance().DEFAULT_DATETIME_FORMAT);
+    public static OffsetDateTime getNowTimeStamp() {
+        return OffsetDateTime.now();
     }
 
 }

@@ -14,7 +14,6 @@ import graphql.schema.TypeResolver;
 import graphql.schema.idl.*;
 
 import java.util.HashMap;
-import java.util.regex.Pattern;
 
 import static com.easygql.component.ConfigurationProperties.*;
 
@@ -27,10 +26,6 @@ import static com.easygql.component.ConfigurationProperties.*;
  */
 public class GetTypeRuntimeWiring {
 
-  private static final Pattern urlPattern =
-      Pattern.compile("^(https?|ftp|file)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]");
-  private static final Pattern emailPattern =
-      Pattern.compile("^(\\w)+(\\.\\w+)*@(\\w)+((\\.\\w+)+)$");
 
   public static RuntimeWiring getSchemaWiring(SchemaData schemaData, String schemaid) {
     WiringFactory schemaWiringFactory = getSchemaWiringFactory(schemaData, schemaid);

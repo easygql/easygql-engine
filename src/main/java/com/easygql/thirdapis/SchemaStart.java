@@ -14,7 +14,6 @@ import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.SchemaParser;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import lombok.extern.slf4j.Slf4j;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -168,8 +167,10 @@ public class SchemaStart extends  ThirdAPI {
                         triggerDao.init(schemaData,schemaID);
                         easyGQL.setTriggerDao(triggerDao);
                         GraphQLCache.addGraphQL(schemaID, easyGQL);
-                        for (Trigger trigger:triggerList) {
-                            TriggerCache.addTrigger(schemaID,schemaData,trigger);
+                        if(null!=triggerList) {
+                            for (Trigger trigger:triggerList) {
+                                TriggerCache.addTrigger(schemaID,schemaData,trigger);
+                            }
                         }
                         return true;
                     } catch (Exception e) {

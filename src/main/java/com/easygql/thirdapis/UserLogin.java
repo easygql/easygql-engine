@@ -99,6 +99,7 @@ public class UserLogin extends  ThirdAPI {
         loginResultField.setNotnull(true);
         loginResultField.setName(GRAPHQL_LOGIN_RESULT_FIELDNAME);
         HashMap<String, ThirdAPIField> outputFieldsMap = new HashMap<>();
+        outputFieldsMap.put(GRAPHQL_LOGIN_RESULT_FIELDNAME,loginResultField);
         outputFieldsMap.put(GRAPHQL_TOKEN_FIELDNAME,tokenField);
         return outputFieldsMap;
     }

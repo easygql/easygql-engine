@@ -44,13 +44,14 @@ public class GraphQLElementGenerator {
           .defaultValue(GRAPHQL_CONFLICT_REPLACE)
           .build();
   private static Pattern urlPattern =
-      Pattern.compile("^(https?|ftp|file)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]");
+      Pattern.compile(
+          "^(http:\\/\\/|https:\\/\\/)?(www.)?([a-zA-Z0-9]+).[a-zA-Z0-9]*.[a-z]{3}.?([a-z]+)?$");
   private static Pattern emailPattern = Pattern.compile("^(\\w)+(\\.\\w+)*@(\\w)+((\\.\\w+)+)$");
   public static final GraphQLScalarType urlType =
-      ExtendedScalars.newRegexScalar("URL").addPattern(emailPattern).build();
+      ExtendedScalars.newRegexScalar("URL").addPattern(urlPattern).build();
   public static final GraphQLScalarType emailType =
       ExtendedScalars.newRegexScalar("Email").addPattern(emailPattern).build();
-  public static GraphQLObjectType mutationReturn =
+  public static GraphQLObjectType deleteReturn =
       GraphQLObjectType.newObject()
           .name(GRAPHQL_DELETERESULT_POSTFIX)
           .field(
@@ -58,6 +59,14 @@ public class GraphQLElementGenerator {
                   .name(GRAPHQL_AFFECTEDROW_FIELDNAME)
                   .type(Scalars.GraphQLInt))
           .build();
+  public static GraphQLObjectType updateReturn =
+          GraphQLObjectType.newObject()
+                  .name(GRAPHQL_UPDATERESULT_POSTFIX)
+                  .field(
+                          GraphQLFieldDefinition.newFieldDefinition()
+                                  .name(GRAPHQL_AFFECTEDROW_FIELDNAME)
+                                  .type(Scalars.GraphQLInt))
+                  .build();
   public static GraphQLObjectType insertReturn =
       GraphQLObjectType.newObject()
           .name(GRAPHQL_INSERTRESULT_POSTFIX)
@@ -461,7 +470,7 @@ public class GraphQLElementGenerator {
                 .name(GRAPHQL_WHERE_ARGUMENT)
                 .type(getRefObjectType(objectTypeMetaData.getWhereInputObjectName())))
         .withDirective(getAPIObjectDestoryDirective(objectTypeMetaData))
-        .type(mutationReturn)
+        .type(deleteReturn)
         .build();
   }
 
@@ -507,7 +516,7 @@ public class GraphQLElementGenerator {
                     GraphQLNonNull.nonNull(
                         getRefObjectTypeUpdateInput(objectTypeMetaData.getOutPutName()))))
         .withDirective(getAPIObjectUpdateDirective(objectTypeMetaData))
-        .type(mutationReturn)
+        .type(updateReturn)
         .build();
   }
 
@@ -794,11 +803,11 @@ public class GraphQLElementGenerator {
           .argument(
               GraphQLArgument.newArgument()
                   .name(GRAPHQL_FROM_ID)
-                  .type(GraphQLNonNull.nonNull(GraphQLList.list(Scalars.GraphQLID))))
+                  .type(GraphQLNonNull.nonNull(Scalars.GraphQLID)))
           .argument(
               GraphQLArgument.newArgument()
                   .name(GRAPHQL_TO_ID)
-                  .type(GraphQLNonNull.nonNull(Scalars.GraphQLID)))
+                  .type(GraphQLNonNull.nonNull(GraphQLList.list(Scalars.GraphQLID))))
           .type(nestRemoveResult)
           .withDirective(getAPINestToIDInputDirective(relationField))
           .build();
@@ -2438,7 +2447,7 @@ public class GraphQLElementGenerator {
       for (RelationField relationField : objecttypetmp.getFromRelationFieldData().values()) {
         if (!relationField.getIrrevisible().containsAll(roles)) {
           String fromIDInputAPIName = getNestFieldNameFromIDInput(relationField);
-          if (null == mutationAPIMap.get(fromIDInputAPIName)) {
+          if (null == mutationAPIMap.get(fromIDInputAPIName) && !relationField.getIfcascade()) {
             mutationObjectTypeBuilder.field(getAPIFieldFromIDInput(relationField));
             APIMetaData fromIDInputAPIMetaData = new APIMetaData();
             fromIDInputAPIMetaData.setApiname(fromIDInputAPIName);
@@ -2447,7 +2456,7 @@ public class GraphQLElementGenerator {
             mutationAPIMap.put(fromIDInputAPIName, fromIDInputAPIMetaData);
           }
           String toIDInputAPIName = getNestFieldNameToIDInput(relationField);
-          if (null == mutationAPIMap.get(toIDInputAPIName)) {
+          if (null == mutationAPIMap.get(toIDInputAPIName) && !relationField.getIfcascade()) {
             mutationObjectTypeBuilder.field(getAPIFieldToIDInput(relationField));
             APIMetaData toIDInputAPIMetaData = new APIMetaData();
             toIDInputAPIMetaData.setObjectname(objectName);

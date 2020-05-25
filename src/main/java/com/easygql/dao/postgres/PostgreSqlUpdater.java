@@ -9,7 +9,11 @@ import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.time.OffsetDateTime;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import static com.easygql.component.ConfigurationProperties.GRAPHQL_AFFECTEDROW_FIELDNAME;
@@ -48,7 +52,7 @@ public class PostgreSqlUpdater implements DataUpdater {
                StringBuilder updateSQL = new StringBuilder();
                updateSQL.append("update  ").append(tableName).append(" set ");
                if(lastUpdateFields.size()>0) {
-                   String nowTime = getNowTimeStamp();
+                   OffsetDateTime nowTime = getNowTimeStamp();
                    for(String lastUpdateField : lastUpdateFields) {
                        updateObjectMap.put(lastUpdateField,nowTime);
                    }

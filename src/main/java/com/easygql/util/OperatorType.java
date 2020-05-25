@@ -177,13 +177,13 @@ public class OperatorType {
                 .field(GraphQLInputObjectField.newInputObjectField().name(GRAPHQL_FILTER_HASONE_OPERATOR).type(Scalars.GraphQLString))
                 .build();
         IDListWhereInput = GraphQLInputObjectType.newInputObject().name(GRAPHQL_StringLISTWHEREINPUT)
-                .field(GraphQLInputObjectField.newInputObjectField().name(GRAPHQL_FILTER_HASONE_OPERATOR).type(Scalars.GraphQLString))
+                .field(GraphQLInputObjectField.newInputObjectField().name(GRAPHQL_FILTER_HASONE_OPERATOR).type(Scalars.GraphQLID))
                 .build();
         FloatListWhereInput = GraphQLInputObjectType.newInputObject().name(GRAPHQL_FLOATLISTWHEREINPUT)
-                .field(GraphQLInputObjectField.newInputObjectField().name(GRAPHQL_FILTER_HASONE_OPERATOR).type(Scalars.GraphQLString))
+                .field(GraphQLInputObjectField.newInputObjectField().name(GRAPHQL_FILTER_HASONE_OPERATOR).type(Scalars.GraphQLFloat))
                 .build();
         DoubleListWhereInput = GraphQLInputObjectType.newInputObject().name(GRAPHQL_DOUBLELISTWHEREINPUT)
-                .field(GraphQLInputObjectField.newInputObjectField().name(GRAPHQL_FILTER_HASONE_OPERATOR).type(Scalars.GraphQLString))
+                .field(GraphQLInputObjectField.newInputObjectField().name(GRAPHQL_FILTER_HASONE_OPERATOR).type(Scalars.GraphQLFloat))
                 .build();
 
     }
