@@ -369,7 +369,6 @@ public class PostgreSqlSchema implements SchemaDao {
           .append(POSTGRES_COLUMNNAME_PREFIX)
           .append(scalarFieldInfo.getName())
           .append(" ");
-      if (!scalarFieldInfo.isIslist()) {
         switch (scalarFieldInfo.getType()) {
           case GRAPHQL_ID_TYPENAME:
             tableGeneratorSQL.append(" varchar ");
@@ -409,7 +408,7 @@ public class PostgreSqlSchema implements SchemaDao {
             break;
           case GRAPHQL_OBJECT_TYPENAME:
           case GRAPHQL_JSON_TYPENAME:
-            tableGeneratorSQL.append(" jsonb");
+            tableGeneratorSQL.append(" json");
             break;
           case GRAPHQL_DATETIME_TYPENAME:
             tableGeneratorSQL.append(" timestamptz");
@@ -424,11 +423,11 @@ public class PostgreSqlSchema implements SchemaDao {
           default:
             throw new BusinessException("E10050");
         }
-      } else {
-        tableGeneratorSQL.append(" jsonb ");
+        if(scalarFieldInfo.isList()) {
+        tableGeneratorSQL.append("[] ");
       }
       tableGeneratorSQL.append(" ");
-      if (scalarFieldInfo.isNotnull()) {
+      if (scalarFieldInfo.isNotNull()) {
         tableGeneratorSQL.append(" NOT NULL ");
       }
     }
@@ -439,18 +438,18 @@ public class PostgreSqlSchema implements SchemaDao {
       }
       location++;
       tableGeneratorSQL.append(POSTGRES_COLUMNNAME_PREFIX).append(enumField.getName()).append(" ");
-      if (enumField.isIslist()) {
-        tableGeneratorSQL.append(" jsonb ");
+      if (enumField.isList()) {
+        tableGeneratorSQL.append(" varchar[] ");
       } else {
         tableGeneratorSQL.append(" varchar ");
       }
       tableGeneratorSQL.append(" ");
-      if (enumField.isNotnull()) {
+      if (enumField.isNotNull()) {
         tableGeneratorSQL.append(" NOT NULL ");
       }
     }
     for (RelationField relationField : objectTypeMetaData.getFromRelationFieldData().values()) {
-      switch (relationField.getRelationtype()) {
+      switch (relationField.getRelationType()) {
         case GRAPHQL_MANY2ONE_NAME:
           if (0 != location) {
             tableGeneratorSQL.append(",");
@@ -460,7 +459,7 @@ public class PostgreSqlSchema implements SchemaDao {
           location++;
           tableGeneratorSQL
               .append(POSTGRES_COLUMNNAME_PREFIX)
-              .append(relationField.getFromfield())
+              .append(relationField.getFromField())
               .append(" varchar");
           constraintSQL
               .append("\n")
@@ -469,14 +468,14 @@ public class PostgreSqlSchema implements SchemaDao {
               .append("  ADD CONSTRAINT ")
               .append(tableName)
               .append("_")
-              .append(relationField.getFromfield())
+              .append(relationField.getFromField())
               .append(GRAPHQL_FOREIGN_KEY_POSTFIX)
               .append(" FOREIGN KEY (")
               .append(POSTGRES_COLUMNNAME_PREFIX)
-              .append(relationField.getFromfield())
+              .append(relationField.getFromField())
               .append(") REFERENCES ")
               .append(POSTGRES_TABLENAME_PREFIX)
-              .append(relationField.getToobject())
+              .append(relationField.getToObject())
               .append(" (")
               .append(POSTGRES_COLUMNNAME_PREFIX)
               .append(GRAPHQL_ID_FIELDNAME)
@@ -490,13 +489,13 @@ public class PostgreSqlSchema implements SchemaDao {
       }
     }
     for (RelationField relationField : objectTypeMetaData.getToRelationFieldData().values()) {
-      switch (relationField.getRelationtype()) {
+      switch (relationField.getRelationType()) {
         case GRAPHQL_MANY2ONE_NAME:
         case GRAPHQL_MANY2MANY_NAME:
           break;
         case GRAPHQL_ONE2ONE_NAME:
         case GRAPHQL_ONE2MANY_NAME:
-          if (!relationField.getIfcascade()) {
+          if (!relationField.getIfCascade()) {
             if (0 != location) {
               tableGeneratorSQL.append(",");
             }
@@ -504,7 +503,7 @@ public class PostgreSqlSchema implements SchemaDao {
             location++;
             tableGeneratorSQL
                 .append(POSTGRES_COLUMNNAME_PREFIX)
-                .append(relationField.getTofield())
+                .append(relationField.getToField())
                 .append(" varchar ");
             constraintSQL
                 .append("\n")
@@ -513,14 +512,14 @@ public class PostgreSqlSchema implements SchemaDao {
                 .append("  ADD CONSTRAINT ")
                 .append(tableName)
                 .append("_")
-                .append(relationField.getTofield())
+                .append(relationField.getToField())
                 .append(GRAPHQL_FOREIGN_KEY_POSTFIX)
                 .append(" FOREIGN KEY (")
                 .append(POSTGRES_COLUMNNAME_PREFIX)
-                .append(relationField.getTofield())
+                .append(relationField.getToField())
                 .append(") REFERENCES ")
                 .append(POSTGRES_TABLENAME_PREFIX)
-                .append(relationField.getFromobject())
+                .append(relationField.getFromObject())
                 .append(" (")
                 .append(POSTGRES_COLUMNNAME_PREFIX)
                 .append(GRAPHQL_ID_FIELDNAME)
@@ -533,7 +532,7 @@ public class PostgreSqlSchema implements SchemaDao {
             location++;
             tableGeneratorSQL
                 .append(POSTGRES_COLUMNNAME_PREFIX)
-                .append(relationField.getTofield())
+                .append(relationField.getToField())
                 .append(" varchar ");
             constraintSQL
                 .append("\n")
@@ -542,14 +541,14 @@ public class PostgreSqlSchema implements SchemaDao {
                 .append("  ADD CONSTRAINT ")
                 .append(tableName)
                 .append("_")
-                .append(relationField.getTofield())
+                .append(relationField.getToField())
                 .append(GRAPHQL_FOREIGN_KEY_POSTFIX)
                 .append(" FOREIGN KEY (")
                 .append(POSTGRES_COLUMNNAME_PREFIX)
-                .append(relationField.getTofield())
+                .append(relationField.getToField())
                 .append(") REFERENCES ")
                 .append(POSTGRES_TABLENAME_PREFIX)
-                .append(relationField.getFromobject())
+                .append(relationField.getFromObject())
                 .append(" (")
                 .append(POSTGRES_COLUMNNAME_PREFIX)
                 .append(GRAPHQL_ID_FIELDNAME)
@@ -566,7 +565,7 @@ public class PostgreSqlSchema implements SchemaDao {
           unqiueConstraintList += ",";
         }
         uniqueConstraintLoc++;
-        unqiueConstraintList += fieldname;
+        unqiueConstraintList += POSTGRES_COLUMNNAME_PREFIX+fieldname;
       }
       tableGeneratorSQL
           .append(",\n")
@@ -609,7 +608,7 @@ public class PostgreSqlSchema implements SchemaDao {
           .append(POSTGRES_FROM_COLUMNNAME)
           .append(") REFERENCES ")
           .append(POSTGRES_TABLENAME_PREFIX)
-          .append(relationField.getFromobject())
+          .append(relationField.getFromObject())
           .append(" (")
           .append(POSTGRES_COLUMNNAME_PREFIX)
           .append(GRAPHQL_ID_FIELDNAME)
@@ -627,7 +626,7 @@ public class PostgreSqlSchema implements SchemaDao {
           .append(POSTGRES_TO_COLUMNNAME)
           .append(") REFERENCES ")
           .append(POSTGRES_TABLENAME_PREFIX)
-          .append(relationField.getToobject())
+          .append(relationField.getToObject())
           .append(" (")
           .append(POSTGRES_COLUMNNAME_PREFIX)
           .append(GRAPHQL_ID_FIELDNAME)
@@ -644,8 +643,8 @@ public class PostgreSqlSchema implements SchemaDao {
 
   public static String getTableNameofRelation(@NonNull RelationField relationField) {
     return POSTGRES_TABLENAME_PREFIX
-        + relationField.getFromobject()
+        + relationField.getFromObject()
         + "_"
-        + relationField.getFromfield();
+        + relationField.getFromField();
   }
 }

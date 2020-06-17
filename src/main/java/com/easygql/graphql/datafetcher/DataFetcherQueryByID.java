@@ -105,42 +105,42 @@ public class DataFetcherQueryByID implements EasyGQLDataFetcher<Object> {
       String fieldType = fieldsMap.get(fieldName);
       if (fieldType.equals(GRAPHQL_SCALARFIELD_TYPENAME)) {
         ScalarFieldInfo scalarFieldInfo = objectTypeMetaData.getScalarFieldData().get(fieldName);
-        if (null != scalarFieldInfo.getInvisible_roles()
-            && scalarFieldInfo.getInvisible_roles().contains(roleInfo)) {
+        if (null != scalarFieldInfo.getInvisibleRoles()
+            && scalarFieldInfo.getInvisibleRoles().contains(roleInfo)) {
           result.remove(fieldName);
         }
       } else if (fieldType.equals(GRAPHQL_ENUMTYPE_TYPENAME)) {
         EnumField enumField = objectTypeMetaData.getEnumFieldData().get(fieldName);
-        if (null != enumField.getInvisible() && enumField.getInvisible().contains(roleInfo)) {
+        if (null != enumField.getInvisibleRoles() && enumField.getInvisibleRoles().contains(roleInfo)) {
           result.remove(roleInfo);
         }
       } else if (fieldType.equals(GRAPHQL_FROMRELATION_TYPENAME)) {
         RelationField relationField = objectTypeMetaData.getFromRelationFieldData().get(fieldName);
-        if(relationField.getRelationtype().equals(GRAPHQL_ONE2MANY_NAME)||relationField.getRelationtype().equals(GRAPHQL_MANY2MANY_NAME)) {
+        if(relationField.getRelationType().equals(GRAPHQL_ONE2MANY_NAME)||relationField.getRelationType().equals(GRAPHQL_MANY2MANY_NAME)) {
           if(null == result.get(fieldName)) {
             result.put(fieldName,new ArrayList<>());
           }
           List<HashMap> selectObjList = (List<HashMap>)result.get(fieldName);
           for (HashMap tmpResultMap : selectObjList ) {
-            filterQueryField(roleInfo, schemaData, relationField.getToobject(), tmpResultMap);
+            filterQueryField(roleInfo, schemaData, relationField.getToObject(), tmpResultMap);
           }
         } else {
           HashMap selectTmpFields = (HashMap) result.get(fieldName);
-          filterQueryField(roleInfo, schemaData, relationField.getToobject(), selectTmpFields);
+          filterQueryField(roleInfo, schemaData, relationField.getToObject(), selectTmpFields);
         }
       } else {
         RelationField relationField = objectTypeMetaData.getToRelationFieldData().get(fieldName);
-        if(relationField.getRelationtype().equals(GRAPHQL_MANY2ONE_NAME)||relationField.getRelationtype().equals(GRAPHQL_MANY2MANY_NAME)) {
+        if(relationField.getRelationType().equals(GRAPHQL_MANY2ONE_NAME)||relationField.getRelationType().equals(GRAPHQL_MANY2MANY_NAME)) {
           if(null == result.get(fieldName)) {
             result.put(fieldName,new ArrayList<>());
           }
           List<HashMap> selectObjList = (List<HashMap>)result.get(fieldName);
           for (HashMap tmpResultMap : selectObjList ) {
-            filterQueryField(roleInfo, schemaData, relationField.getFromobject(), tmpResultMap);
+            filterQueryField(roleInfo, schemaData, relationField.getFromObject(), tmpResultMap);
           }
         } else {
           HashMap selectTmpFields = (HashMap) result.get(fieldName);
-          filterQueryField(roleInfo, schemaData, relationField.getFromobject(), selectTmpFields);
+          filterQueryField(roleInfo, schemaData, relationField.getFromObject(), selectTmpFields);
         }
 
       }

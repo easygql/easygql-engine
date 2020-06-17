@@ -73,7 +73,7 @@ public class SchemaPublish extends ThirdAPI {
     relatoinFields.put("relationtype", 1);
     relatoinFields.put("ifcascade", 1);
     relatoinFields.put("invisible_roles", 1);
-    relatoinFields.put("irrevisible_roles", 1);
+    relatoinFields.put("unmodifiable_roles", 1);
     schemaSelecter.put(GRAPHQL_RELATION_FIELDNAME, relatoinFields);
     HashMap scalarFields = new HashMap();
     objectTypeSelecter.put(GRAPHQL_SCALARFIELD_FIELDNAME, scalarFields);
@@ -85,7 +85,7 @@ public class SchemaPublish extends ThirdAPI {
     scalarFields.put(GRAPHQL_DEFAULTVALUE_FIELDNAME, 1);
     scalarFields.put(GRAPHQL_TYPE_FIELDNAME, 1);
     scalarFields.put("invisible_roles", 1);
-    scalarFields.put("irrevisible_roles", 1);
+    scalarFields.put("unmodifiable_roles", 1);
     HashMap enumFields = new HashMap();
     objectTypeSelecter.put(GRAPHQL_ENUMFIELD_FIELDNAME, enumFields);
     enumFields.put(GRAPHQL_ID_FIELDNAME, 1);
@@ -94,7 +94,7 @@ public class SchemaPublish extends ThirdAPI {
     enumFields.put(GRAPHQL_DEFAULTVALUE_FIELDNAME, 1);
     enumFields.put(GRAPHQL_TYPE_FIELDNAME, 1);
     enumFields.put("invisible_roles", 1);
-    enumFields.put("irrevisible_roles", 1);
+    enumFields.put("unmodifiable_roles", 1);
     HashMap uniqueConstraintHashMap = new HashMap();
     uniqueConstraintHashMap.put(GRAPHQL_ID_FIELDNAME, 1);
     uniqueConstraintHashMap.put(GRAPHQL_FIELDS_FIELDNAME, 1);
@@ -203,6 +203,8 @@ public class SchemaPublish extends ThirdAPI {
                           } else {
                             schemaObject.setDatasourceinfo(dataSourceInfo);
                           }
+                          List<RelationField> relationFields = JSONObject.parseArray(JSONObject.toJSONString(schemaInfoMap.get(GRAPHQL_RELATION_FIELDNAME)),RelationField.class);
+                          schemaObject.setRelations(relationFields);
                           HashMap publishedSchemaInfo =
                               (HashMap) schemaInfoMap.get(GRAPHQL_PUBLISHEDSCHEMA_FIELDNAME);
                           String publishedSchemaID = null;
@@ -289,8 +291,7 @@ public class SchemaPublish extends ThirdAPI {
                                                     dataUpdater.updateWhere(
                                                         filterMap,
                                                         statusUpdateMap,
-                                                        GRAPHQL_CONFLICT_REPLACE,
-                                                        null);
+                                                        GRAPHQL_CONFLICT_REPLACE);
                                                   }
                                                   SchemaStart.startSchema(schemaID);
                                                 }

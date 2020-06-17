@@ -63,6 +63,9 @@ public class SchemaApiController {
             userInfo.put("username","Admin");
             userInfo.put(GRAPHQL_ROLE_FIELDNAME,"Admin");
         } else {
+            userInfo.put("id", UUID.randomUUID().toString());
+            userInfo.put("username","Admin");
+            userInfo.put(GRAPHQL_ROLE_FIELDNAME,"Admin");
             userInfo=JSONObject.parseObject(JSONObject.toJSONString(JwtUtil.parser(header.get("Authorization")).getBody()),HashMap.class);
         }
         return Mono.fromFuture(QueryService.query(schemaid,paramstr,userInfo));

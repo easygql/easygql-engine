@@ -89,7 +89,7 @@ public class AuthorityUtil {
               filterTuple.put(
                   operationkey,
                   transferRowFilter(
-                      relationField.getToobject(),
+                      relationField.getToObject(),
                       loginedUser,
                       (HashMap) filterEntryMap.get(operationkey),
                       schemaData,
@@ -100,7 +100,7 @@ public class AuthorityUtil {
               filterTuple.put(
                   operationkey,
                   transferRowFilter(
-                      relationField.getFromobject(),
+                      relationField.getFromObject(),
                       loginedUser,
                       (HashMap) filterEntryMap.get(operationkey),
                       schemaData,
@@ -245,9 +245,9 @@ public class AuthorityUtil {
               String.class.cast(
                   userInfo.get(ConfigurationProperties.getInstance().ROLE_IN_USER_FIELDNAME));
           List<String> disabledRoles =
-              schemaData.getObjectMetaData().get(objectName).getUnreadable_roles();
+              schemaData.getObjectMetaData().get(objectName).getUnreadableRoles();
           HashMap readConstraint =
-              schemaData.getObjectMetaData().get(objectName).getRead_constraints();
+              schemaData.getObjectMetaData().get(objectName).getReadConstraints();
           if (null != disabledRoles && disabledRoles.contains(roleInfo)) {
             throw new NotAuthorizedException();
           }
@@ -349,7 +349,8 @@ public class AuthorityUtil {
             HashSet<String> fieldset = updateForbiddenFields.get(roleInfo);
             HashSet<String> forbiddenSet = new HashSet<>();
             forbiddenSet.addAll(fieldset);
-            if (forbiddenSet.retainAll(updateObj.keySet())) {
+            forbiddenSet.retainAll(updateObj.keySet());
+            if (forbiddenSet.size()>0) {
               throw new NotAuthorizedException();
             }
           }

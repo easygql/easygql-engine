@@ -94,21 +94,21 @@ public class SchemaStart extends  ThirdAPI {
                             HashMap<String,RelationRemover> relationRemoverHashMap = new HashMap<>();
                             if(null!=typeMetaData.getFromRelationFieldData()) {
                                 typeMetaData.getFromRelationFieldData().forEach((fieldName,relationField)->{
-                                    if(GRAPHQL_ONE2ONE_NAME.equals(relationField.getRelationtype())) {
+                                    if(GRAPHQL_ONE2ONE_NAME.equals(relationField.getRelationType())) {
                                         One2OneRelationCreater one2OneRelationCreater = DaoFactory.getOne2OneRelationCreator(databaseKind);
                                         one2OneRelationCreater.Init(schemaData,schemaID,relationField);
                                         relationAddHashMap.put(fieldName,one2OneRelationCreater);
                                         One2OneRelationRemover one2OneRelationRemover = DaoFactory.getOne2OneRelationRemover(databaseKind);
                                         one2OneRelationRemover.Init(schemaData,schemaID,relationField);
                                         relationRemoverHashMap.put(fieldName,one2OneRelationRemover);
-                                    } else if(GRAPHQL_ONE2MANY_NAME.equals(relationField.getRelationtype())){
+                                    } else if(GRAPHQL_ONE2MANY_NAME.equals(relationField.getRelationType())){
                                         One2ManyRelationCreater one2ManyRelationCreater = DaoFactory.getOne2ManyRelationCreator(databaseKind);
                                         one2ManyRelationCreater.Init(schemaData,schemaID,relationField);
                                         relationAddHashMap.put(fieldName,one2ManyRelationCreater);
                                         One2ManyRelationRemover one2ManyRelationRemover = DaoFactory.getOne2ManyRelationRemover(databaseKind);
                                         one2ManyRelationRemover.Init(schemaData,schemaID,relationField);
                                         relationRemoverHashMap.put(fieldName,one2ManyRelationRemover);
-                                    } else if(GRAPHQL_MANY2ONE_NAME.equals(relationField.getRelationtype())) {
+                                    } else if(GRAPHQL_MANY2ONE_NAME.equals(relationField.getRelationType())) {
                                         Many2OneRelationCreater many2OneRelationCreater = DaoFactory.getMany2OneRelationCreator(databaseKind);
                                         many2OneRelationCreater.Init(schemaData,schemaID,relationField);
                                         relationAddHashMap.put(fieldName,many2OneRelationCreater);
@@ -127,21 +127,21 @@ public class SchemaStart extends  ThirdAPI {
                             }
                             if(null!=typeMetaData.getToRelationFieldData()) {
                                 typeMetaData.getToRelationFieldData().forEach((fieldName,relationField)->{
-                                    if(GRAPHQL_ONE2ONE_NAME.equals(relationField.getRelationtype())) {
+                                    if(GRAPHQL_ONE2ONE_NAME.equals(relationField.getRelationType())) {
                                         One2OneRelationCreater one2OneRelationCreater = DaoFactory.getOne2OneRelationCreator(databaseKind);
                                         one2OneRelationCreater.Init(schemaData,schemaID,relationField);
                                         relationAddHashMap.put(fieldName,one2OneRelationCreater);
                                         One2OneRelationRemover one2OneRelationRemover = DaoFactory.getOne2OneRelationRemover(databaseKind);
                                         one2OneRelationRemover.Init(schemaData,schemaID,relationField);
                                         relationRemoverHashMap.put(fieldName,one2OneRelationRemover);
-                                    } else if(GRAPHQL_ONE2MANY_NAME.equals(relationField.getRelationtype())){
+                                    } else if(GRAPHQL_ONE2MANY_NAME.equals(relationField.getRelationType())){
                                         One2ManyRelationCreater one2ManyRelationCreater = DaoFactory.getOne2ManyRelationCreator(databaseKind);
                                         one2ManyRelationCreater.Init(schemaData,schemaID,relationField);
                                         relationAddHashMap.put(fieldName,one2ManyRelationCreater);
                                         One2ManyRelationRemover one2ManyRelationRemover = DaoFactory.getOne2ManyRelationRemover(databaseKind);
                                         one2ManyRelationRemover.Init(schemaData,schemaID,relationField);
                                         relationRemoverHashMap.put(fieldName,one2ManyRelationRemover);
-                                    } else if(GRAPHQL_MANY2ONE_NAME.equals(relationField.getRelationtype())) {
+                                    } else if(GRAPHQL_MANY2ONE_NAME.equals(relationField.getRelationType())) {
                                         Many2OneRelationCreater many2OneRelationCreater = DaoFactory.getMany2OneRelationCreator(databaseKind);
                                         many2OneRelationCreater.Init(schemaData,schemaID,relationField);
                                         relationAddHashMap.put(fieldName,many2OneRelationCreater);
@@ -238,7 +238,7 @@ public class SchemaStart extends  ThirdAPI {
                                                                                     .get(GRAPHQL_SCHEMA_TYPENAME)
                                                                                     .getDataupdater()
                                                                                     .updateWhere(
-                                                                                            whereInput, updateField, "update", null);
+                                                                                            whereInput, updateField, "update");
                                                                             future.complete(true);
                                                                         } else {
                                                                             future.complete(false);

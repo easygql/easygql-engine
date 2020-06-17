@@ -33,7 +33,7 @@ public class SchemaStop extends  ThirdAPI {
                     whereInput.put(GRAPHQL_FILTER_FILTER_OPERATOR,idField);
                     HashMap updateField = new HashMap();
                     updateField.put(GRAPHQL_SCHEMASTATUS_FIELDNAME,SCHEMA_STATUS_STOPPED);
-                    GraphQLCache.getEasyGQL(GRAPHQL_SCHEMA_ID_DEFAULT).getObjectDaoMap().get(GRAPHQL_SCHEMA_TYPENAME).getDataupdater().updateWhere(whereInput,updateField,"update",null);
+                    GraphQLCache.getEasyGQL(GRAPHQL_SCHEMA_ID_DEFAULT).getObjectDaoMap().get(GRAPHQL_SCHEMA_TYPENAME).getDataupdater().updateWhere(whereInput,updateField,"update");
                     HashMap resultMap = new HashMap();
                     resultMap.put(GRAPHQL_OPERATION_RESULT_NAME,true);
                     return resultMap;

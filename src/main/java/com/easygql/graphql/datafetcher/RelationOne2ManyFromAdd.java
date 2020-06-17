@@ -33,14 +33,14 @@ public class RelationOne2ManyFromAdd implements  EasyGQLDataFetcher<Object> {
         this.one2ManyRelationCreater = DaoFactory.getOne2ManyRelationCreator(schemaData.getDatabasekind());
         this.one2ManyRelationCreater.Init(schemaData,schemaID,relationField);
         this.disabledRoles=new HashSet<>();
-        this.disabledRoles.addAll(schemaData.getObjectMetaData().get(relationField.getToobject()).getUninsertable_roles());
-        if(null!=relationField.getIrrevisible()) {
-            this.disabledRoles.addAll(relationField.getIrrevisible());
+        this.disabledRoles.addAll(schemaData.getObjectMetaData().get(relationField.getToObject()).getUninsertableRoles());
+        if(null!=relationField.getUnmodifiableRoles()) {
+            this.disabledRoles.addAll(relationField.getUnmodifiableRoles());
         }
         this.forbiddenFields = new HashMap<>();
-        DataFetcherCreate.forbiddenFieldsConstruct(schemaData,relationField.getToobject(),forbiddenFields);
-        this.lastUpdateFields =getLastUpdateFields(schemaData.getObjectMetaData().get(relationField.getToobject()));
-        this.createdAtFields =getCreateAtFields(schemaData.getObjectMetaData().get(relationField.getToobject()));
+        DataFetcherCreate.forbiddenFieldsConstruct(schemaData,relationField.getToObject(),forbiddenFields);
+        this.lastUpdateFields =getLastUpdateFields(schemaData.getObjectMetaData().get(relationField.getToObject()));
+        this.createdAtFields =getCreateAtFields(schemaData.getObjectMetaData().get(relationField.getToObject()));
     }
 
     @Override

@@ -1,16 +1,15 @@
 package com.easygql.dao.postgres;
 
 import com.easygql.dao.One2ManyRelationCreater;
-
 import com.easygql.exception.BusinessException;
 import com.easygql.util.*;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Transaction;
 import io.vertx.sqlclient.Tuple;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -41,46 +40,46 @@ public class PostgreSqlOne2ManyAdd implements One2ManyRelationCreater {
     this.fieldSequence = new ArrayList<>();
     this.insertSql =
         PostgreSqlInserter.insertSqlConstruct(
-            schemaData, relationField.getToobject(), fieldSequence);
+            schemaData, relationField.getToObject(), fieldSequence);
     this.fromSql =
         " update "
-            + schemaData.getObjectMetaData().get(relationField.getToobject()).getTableName()
+            + schemaData.getObjectMetaData().get(relationField.getToObject()).getTableName()
             + " set "
             + POSTGRES_COLUMNNAME_PREFIX
-            + relationField.getTofield()
+            + relationField.getToField()
             + " = $1 where "
             + POSTGRES_COLUMNNAME_PREFIX
             + POSTGRES_ID_FIELD
             + "=$2  ; ";
     this.fromResetSql =
         " update "
-            + schemaData.getObjectMetaData().get(relationField.getToobject()).getTableName()
+            + schemaData.getObjectMetaData().get(relationField.getToObject()).getTableName()
             + " set "
             + POSTGRES_COLUMNNAME_PREFIX
-            + relationField.getTofield()
+            + relationField.getToField()
             + " = null where "
             + POSTGRES_COLUMNNAME_PREFIX
             + relationField
             + "=$1 ; ";
     this.toSql =
         " update "
-            + schemaData.getObjectMetaData().get(relationField.getToobject()).getTableName()
+            + schemaData.getObjectMetaData().get(relationField.getToObject()).getTableName()
             + " set "
             + POSTGRES_COLUMNNAME_PREFIX
-            + relationField.getTofield()
+            + relationField.getToField()
             + " =$1  where "
             + POSTGRES_COLUMNNAME_PREFIX
             + POSTGRES_ID_FIELD
             + " =$2 ;";
     this.resetSql =
         "delete from "
-            + schemaData.getObjectMetaData().get(relationField.getToobject()).getTableName()
+            + schemaData.getObjectMetaData().get(relationField.getToObject()).getTableName()
             + " where "
             + POSTGRES_COLUMNNAME_PREFIX
-            + relationField.getTofield()
+            + relationField.getToField()
             + "=$1 ;";
-    this.fromObject = schemaData.getObjectMetaData().get(relationField.getFromobject());
-    this.toObject = schemaData.getObjectMetaData().get(relationField.getToobject());
+    this.fromObject = schemaData.getObjectMetaData().get(relationField.getFromObject());
+    this.toObject = schemaData.getObjectMetaData().get(relationField.getToObject());
   }
 
   @Override
@@ -90,70 +89,101 @@ public class PostgreSqlOne2ManyAdd implements One2ManyRelationCreater {
     CompletableFuture.runAsync(
         () -> {
           try {
-            String addFieldName = relationField.getTofield();
+            String addFieldName = relationField.getToField();
             List objectList = ArrayList.class.cast(targetObject);
             List idList = new ArrayList<>();
             List<Tuple> tupleList = new ArrayList<>();
             for (Object object : objectList) {
-              Map map = Map.class.cast(object);
-              map.put(addFieldName, srcID);
+              Map resultData = Map.class.cast(object);
+              resultData.put(addFieldName, srcID);
               Tuple tuple = Tuple.tuple();
-              for (String field : fieldSequence) {
-                if (null == map.get(field)) {
-                  tuple.addValue(null);
-                } else {
-                  Object objectValue = map.get(field);
-                  String fieldType = toObject.getFields().get(field);
-                  if (null == fieldType) {
-                    throw new BusinessException("E10092");
-                  }
-                  if (fieldType.equals(GRAPHQL_SCALARFIELD_TYPENAME)) {
-                    ScalarFieldInfo scalarFieldInfo = toObject.getScalarFieldData().get(field);
-                    if (scalarFieldInfo.getType().equals(GRAPHQL_OBJECT_TYPENAME)
-                        || scalarFieldInfo.getType().equals(GRAPHQL_JSON_TYPENAME)) {
-                      if (scalarFieldInfo.isIslist()) {
-                        List<Object> objectListData = (List<Object>) objectValue;
-                        JsonArray tmpJsonArray = new JsonArray();
-                        for (Object tmpObjData : objectListData) {
-                          JsonObject jsonObject = JsonObject.mapFrom(tmpObjData);
-                          tmpJsonArray.add(jsonObject);
-                        }
-                        tuple.addValue(tmpJsonArray);
-                      } else {
-                        JsonObject jsonObject = JsonObject.mapFrom(objectValue);
-                        tuple.addValue(jsonObject);
-                      }
+                for (String field : fieldSequence) {
+                    if (null == resultData.get(field)) {
+                        tuple.addValue(null);
                     } else {
-                      if (scalarFieldInfo.isIslist()) {
-                        JsonArray tmpJsonArray = new JsonArray();
-                        List<Object> objectListData = (List<Object>) objectValue;
-                        for (Object tmpObjData : objectListData) {
-                          tmpJsonArray.add(tmpObjData);
+                        Object objectValue = resultData.get(field);
+                        if (toObject
+                                .getFields()
+                                .get(field)
+                                .equals(GRAPHQL_ENUMFIELD_TYPENAME)) {
+                            if (toObject.getEnumFieldData().get(field).isList()) {
+                                List<String> tmpEnumList = (List<String>) objectValue;
+                                tuple.addStringArray(tmpEnumList.toArray(new String[tmpEnumList.size()]));
+                            } else {
+                                tuple.addValue(objectValue);
+                            }
+                        } else if (toObject.getFields().get(field).equals(GRAPHQL_SCALARFIELD_TYPENAME)) {
+                            ScalarFieldInfo scalarFieldInfo =
+                                    toObject.getScalarFieldData().get(field);
+                            if (scalarFieldInfo.isList()) {
+                                switch (scalarFieldInfo.getType()) {
+                                    case GRAPHQL_ID_TYPENAME:
+                                    case GRAPHQL_CHAR_TYPENAME:
+                                    case GRAPHQL_STRING_TYPENAME:
+                                    case GRAPHQL_URL_TYPENAME:
+                                    case GRAPHQL_EMAIL_TYPENAME:
+                                    case GRAPHQL_BYTE_TYPENAME:
+                                        List<String> tmpScalarStringList = (List<String>) objectValue;
+                                        tuple.addStringArray(
+                                                tmpScalarStringList.toArray(new String[tmpScalarStringList.size()]));
+                                        break;
+                                    case GRAPHQL_INT_TYPENAME:
+                                        List<Integer> tmpScalarIntegerList = (List<Integer>) objectValue;
+                                        tuple.addIntegerArray(
+                                                tmpScalarIntegerList.toArray(
+                                                        new Integer[tmpScalarIntegerList.size()]));
+                                        break;
+                                    case GRAPHQL_BOOLEAN_TYPENAME:
+                                        List<Boolean> tmpScalarBooleanList = (List<Boolean>) objectValue;
+                                        tuple.addBooleanArray(
+                                                tmpScalarBooleanList.toArray(
+                                                        new Boolean[tmpScalarBooleanList.size()]));
+                                        break;
+                                    case GRAPHQL_LONG_TYPENAME:
+                                    case GRAPHQL_BIGINTEGER_TYPENAME:
+                                        List<Long> tmpScalarLongList = (List<Long>) objectValue;
+                                        tuple.addLongArray(
+                                                tmpScalarLongList.toArray(new Long[tmpScalarLongList.size()]));
+                                        break;
+                                    case GRAPHQL_SHORT_TYPENAME:
+                                        List<Short> tmpScalarShortList = (List<Short>) objectValue;
+                                        tuple.addShortArray(
+                                                tmpScalarShortList.toArray(new Short[tmpScalarShortList.size()]));
+                                        break;
+                                    case GRAPHQL_DATE_TYPENAME:
+                                    case GRAPHQL_DATETIME_TYPENAME:
+                                    case GRAPHQL_CREATEDAT_TYPENAME:
+                                    case GRAPHQL_LASTUPDATE_TYPENAME:
+                                        List<OffsetDateTime> tmpScalarDateList =
+                                                (List<OffsetDateTime>) objectValue;
+                                        tuple.addOffsetDateTimeArray(
+                                                tmpScalarDateList.toArray(
+                                                        new OffsetDateTime[tmpScalarDateList.size()]));
+                                        break;
+                                    case GRAPHQL_FLOAT_TYPENAME:
+                                        List<Float> tmpScalarFloatList = (List<Float>) objectValue;
+                                        tuple.addFloatArray(
+                                                tmpScalarFloatList.toArray(new Float[tmpScalarFloatList.size()]));
+                                        break;
+                                    case GRAPHQL_BIGDECIMAL_TYPENAME:
+                                        List<BigDecimal> tmpScalarBigDecimalist = (List<BigDecimal>) objectValue;
+                                        tuple.addValues(tmpScalarBigDecimalist.toArray(new Float[tmpScalarBigDecimalist.size()]));
+                                        break;
+                                    default:
+                                        List tmpObjectValue = (List) objectValue;
+                                        tuple.addValues(tmpObjectValue.toArray());
+                                }
+                            } else {
+                                tuple.addValue(objectValue);
+                            }
                         }
-                        tuple.addValue(tmpJsonArray);
-                      } else {
-                        tuple.addValue(objectValue);
-                      }
+                        else {
+                            tuple.addValue(objectValue);
+                        }
                     }
-                  } else if (fieldType.equals(GRAPHQL_ENUMTYPE_TYPENAME)) {
-                    EnumField enumField = toObject.getEnumFieldData().get(field);
-                    if (enumField.isIslist()) {
-                      List<String> objStrListData = (List<String>) objectValue;
-                      JsonArray tmpJsonArray = new JsonArray();
-                      for (String tmpStr : objStrListData) {
-                        tmpJsonArray.add(tmpStr);
-                      }
-                      tuple.addValue(tmpJsonArray);
-                    } else {
-                      tuple.addValue(objectValue);
-                    }
-                  } else {
-                    tuple.addValue(objectValue);
-                  }
                 }
-              }
               tupleList.add(tuple);
-              idList.add(map.get(GRAPHQL_ID_FIELDNAME));
+              idList.add(resultData.get(GRAPHQL_ID_FIELDNAME));
             }
             PostgreSQLPoolCache.getConnectionFactory(schemaData.getSchemaid()).whenCompleteAsync((sqlConnection, throwable) -> {
                 if(null!=throwable) {
@@ -171,7 +201,7 @@ public class PostgreSqlOne2ManyAdd implements One2ManyRelationCreater {
                     Transaction transaction = sqlConnection.begin();
                     if (reset) {
                         final String finalResetSql =
-                                relationField.getIfcascade() ? resetSql : fromResetSql;
+                                relationField.getIfCascade() ? resetSql : fromResetSql;
                         sqlConnection.preparedQuery(
                                 finalResetSql,
                                 Tuple.of(srcID),
@@ -291,7 +321,7 @@ public class PostgreSqlOne2ManyAdd implements One2ManyRelationCreater {
                       Transaction transaction = sqlConnection.begin();
                       if (reset) {
                           final String finalResetSql =
-                                  relationField.getIfcascade() ? resetSql : fromResetSql;
+                                  relationField.getIfCascade() ? resetSql : fromResetSql;
                           sqlConnection.preparedQuery(
                                   finalResetSql,
                                   Tuple.of(srcID),
@@ -403,7 +433,7 @@ public class PostgreSqlOne2ManyAdd implements One2ManyRelationCreater {
                     Transaction transaction = sqlConnection.begin();
                     if(reset) {
                         final String finalResetSql =
-                                relationField.getIfcascade() ? resetSql : fromResetSql;
+                                relationField.getIfCascade() ? resetSql : fromResetSql;
                         sqlConnection.preparedQuery(
                                 finalResetSql,
                                 Tuple.of(srcID),

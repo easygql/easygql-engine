@@ -42,7 +42,7 @@ public class SchemaCreate extends ThirdAPI {
                 .getObjectDaoMap()
                 .get(GRAPHQL_SCHEMA_TYPENAME)
                 .getDatainserter()
-                .insertDoc(resultInfoMap, GRAPHQL_CONFLICT_REPLACE, null)
+                .insertDoc(resultInfoMap, GRAPHQL_CONFLICT_REPLACE)
                 .whenCompleteAsync(
                     (schemaResult, schemaEX) -> {
                       if (null != schemaEX) {
@@ -52,7 +52,7 @@ public class SchemaCreate extends ThirdAPI {
                           log.error(
                               "{}", LogData.getErrorLog("E10066", errorMap, (Throwable) schemaEX));
                         }
-                        future.complete(new BusinessException("E10066"));
+                        future.completeExceptionally((Throwable) schemaEX);
                       } else {
                         String userType_ID = IDTools.getID();
                         HashMap userType = new HashMap();
@@ -111,8 +111,7 @@ public class SchemaCreate extends ThirdAPI {
                                       idField.put(GRAPHQL_DESCRIPTION_FIELDNAME, "");
                                       idField.put(GRAPHQL_ISLIST_FIELDNAME, false);
                                       idField.put("invisible_roles", new ArrayList<>());
-                                      idField.put("irrevisible_roles", new ArrayList<>());
-
+                                      idField.put("unmodifiable_roles", new ArrayList<>());
                                       HashMap userNameField = new HashMap();
                                       userNameField.put(GRAPHQL_ID_FIELDNAME, IDTools.getID());
                                       userNameField.put(
@@ -123,7 +122,7 @@ public class SchemaCreate extends ThirdAPI {
                                       userNameField.put(GRAPHQL_DESCRIPTION_FIELDNAME, "");
                                       userNameField.put(GRAPHQL_ISLIST_FIELDNAME, false);
                                       userNameField.put("invisible_roles", new ArrayList<>());
-                                      userNameField.put("irrevisible_roles", new ArrayList<>());
+                                      userNameField.put("unmodifiable_roles", new ArrayList<>());
                                       HashMap passwordField = new HashMap();
                                       passwordField.put(GRAPHQL_ID_FIELDNAME, IDTools.getID());
                                       passwordField.put(
@@ -134,7 +133,7 @@ public class SchemaCreate extends ThirdAPI {
                                       passwordField.put(GRAPHQL_DESCRIPTION_FIELDNAME, "");
                                       passwordField.put(GRAPHQL_ISLIST_FIELDNAME, false);
                                       passwordField.put("invisible_roles", new ArrayList<>());
-                                      passwordField.put("irrevisible_roles", new ArrayList<>());
+                                      passwordField.put("unmodifiable_roles", new ArrayList<>());
                                       List fieldList = new ArrayList();
                                       fieldList.add(idField);
                                       fieldList.add(userNameField);
@@ -156,109 +155,134 @@ public class SchemaCreate extends ThirdAPI {
                                                   future.completeExceptionally(
                                                       new BusinessException("E10067"));
                                                 } else {
-                                                  roleAdd
-                                                      .fromAdd(newSchemaID, insertEnumList, false)
-                                                      .whenCompleteAsync(
-                                                          (roleAddResult, roleAddEx) -> {
-                                                            if (null != roleAddEx) {
-                                                              if (log.isErrorEnabled()) {
-                                                                HashMap errorMap = new HashMap();
-                                                                errorMap.putAll(
-                                                                    thirdAPIInput.getRunTimeInfo());
-                                                                log.error(
-                                                                    "{}",
-                                                                    LogData.getErrorLog(
-                                                                        "E10068", errorMap,
-                                                                        roleAddEx));
-                                                              }
-                                                              future.completeExceptionally(
-                                                                  new BusinessException("E10068"));
-                                                            } else {
-                                                              try {
-                                                                One2ManyRelationCreater
-                                                                    roleEnumAdd =
-                                                                        (One2ManyRelationCreater)
-                                                                            GraphQLCache.getEasyGQL(
-                                                                                    schemaID)
-                                                                                .getObjectDaoMap()
-                                                                                .get(
-                                                                                    GRAPHQL_ENUMTYPE_TYPENAME)
-                                                                                .getRelation_add_Fields()
-                                                                                .get(
-                                                                                    GRAPHQL_VALUES_FIELDNAME);
-                                                                HashMap adminRoleMap =
-                                                                    new HashMap();
-                                                                adminRoleMap.put(
-                                                                    GRAPHQL_ID_FIELDNAME,
-                                                                    IDTools.getID());
-                                                                adminRoleMap.put(
-                                                                    GRAPHQL_VALUE_FIELDNAME,
-                                                                    "Admin");
-                                                                adminRoleMap.put(
-                                                                    GRAPHQL_DESCRIPTION_FIELDNAME,
-                                                                    "Admin");
-                                                                HashMap guestRoleMap =
-                                                                    new HashMap();
-                                                                guestRoleMap.put(
-                                                                    GRAPHQL_ID_FIELDNAME,
-                                                                    IDTools.getID());
-                                                                guestRoleMap.put(
-                                                                    GRAPHQL_VALUE_FIELDNAME,
-                                                                    "Guest");
-                                                                guestRoleMap.put(
-                                                                    GRAPHQL_DESCRIPTION_FIELDNAME,
-                                                                    "Guest");
-                                                                List roleList = new ArrayList();
-                                                                roleList.add(adminRoleMap);
-                                                                roleList.add(guestRoleMap);
-                                                                roleEnumAdd
-                                                                    .fromAdd(
-                                                                        roleEnumID, roleList, false)
-                                                                    .whenComplete(
-                                                                        (roleEnumResult,
-                                                                            roleEnumEx) -> {
-                                                                          if (null != roleEnumEx) {
-                                                                            if (log
-                                                                                .isErrorEnabled()) {
-                                                                              HashMap errorMap =
-                                                                                  new HashMap();
-                                                                              errorMap.put(
-                                                                                  GRAPHQL_FROM_ID,
-                                                                                  roleEnumID);
-                                                                              errorMap.put(
-                                                                                  GRAPHQL_TO_OBJECT,
-                                                                                  roleList);
-                                                                              log.error(
-                                                                                  "E10068",
-                                                                                  errorMap,
-                                                                                  roleEnumEx);
-                                                                            }
-                                                                            future
-                                                                                .completeExceptionally(
-                                                                                    new BusinessException(
-                                                                                        "E10068"));
-                                                                          } else {
-                                                                            future.complete(
-                                                                                schemaResult);
+                                                  One2ManyRelationCreater uniqueConstraintAdd =
+                                                          (One2ManyRelationCreater)
+                                                                  GraphQLCache.getEasyGQL(schemaID)
+                                                                          .getObjectDaoMap()
+                                                                          .get(GRAPHQL_CONTENTTYPE_TYPENAME)
+                                                                          .getRelation_add_Fields()
+                                                                          .get(GRAPHQL_UNIQUE_CONSTRAINT_FIELDNAME);
+                                                  List<String> userNameUniqueConstraint = new ArrayList<>();
+                                                  userNameUniqueConstraint.add(GRAPHQL_USERNAME_FIELD);
+                                                  HashMap userNameUniqueConstaintMap = new HashMap();
+                                                  userNameUniqueConstaintMap.put(GRAPHQL_ID_FIELDNAME,IDTools.getID());
+                                                  userNameUniqueConstaintMap.put(GRAPHQL_FIELDS_FIELDNAME,userNameUniqueConstraint);
+                                                  List constraints = new ArrayList();
+                                                  constraints.add(userNameUniqueConstaintMap);
+                                                  uniqueConstraintAdd.fromAdd(userType_ID,constraints,false).whenComplete((constraintResult,constraintEx)->{
+                                                    if(null!=constraintEx) {
+                                                      future.complete(constraintEx);
+                                                    } else {
+                                                      roleAdd
+                                                              .fromAdd(newSchemaID, insertEnumList, false)
+                                                              .whenCompleteAsync(
+                                                                      (roleAddResult, roleAddEx) -> {
+                                                                        if (null != roleAddEx) {
+                                                                          if (log.isErrorEnabled()) {
+                                                                            HashMap errorMap = new HashMap();
+                                                                            errorMap.putAll(
+                                                                                    thirdAPIInput.getRunTimeInfo());
+                                                                            log.error(
+                                                                                    "{}",
+                                                                                    LogData.getErrorLog(
+                                                                                            "E10068", errorMap,
+                                                                                            roleAddEx));
                                                                           }
-                                                                        });
-                                                              } catch (Exception e) {
-                                                                if (log.isErrorEnabled()) {
-                                                                  HashMap errorMap = new HashMap();
-                                                                  errorMap.putAll(
-                                                                      thirdAPIInput
-                                                                          .getRunTimeInfo());
-                                                                  log.error(
-                                                                      "{}",
-                                                                      LogData.getErrorLog(
-                                                                          "E10068", errorMap, e));
-                                                                }
-                                                                future.completeExceptionally(
-                                                                    new BusinessException(
-                                                                        "E10068"));
-                                                              }
-                                                            }
-                                                          });
+                                                                          future.completeExceptionally(
+                                                                                  new BusinessException("E10068"));
+                                                                        } else {
+                                                                          try {
+                                                                            One2ManyRelationCreater
+                                                                                    roleEnumAdd =
+                                                                                    (One2ManyRelationCreater)
+                                                                                            GraphQLCache.getEasyGQL(
+                                                                                                    schemaID)
+                                                                                                    .getObjectDaoMap()
+                                                                                                    .get(
+                                                                                                            GRAPHQL_ENUMTYPE_TYPENAME)
+                                                                                                    .getRelation_add_Fields()
+                                                                                                    .get(
+                                                                                                            GRAPHQL_VALUES_FIELDNAME);
+                                                                            HashMap adminRoleMap =
+                                                                                    new HashMap();
+                                                                            adminRoleMap.put(
+                                                                                    GRAPHQL_ID_FIELDNAME,
+                                                                                    IDTools.getID());
+                                                                            adminRoleMap.put(
+                                                                                    GRAPHQL_VALUE_FIELDNAME,
+                                                                                    ROLE_ADMIN);
+                                                                            adminRoleMap.put(
+                                                                                    GRAPHQL_DESCRIPTION_FIELDNAME,
+                                                                                    ROLE_ADMIN);
+                                                                            HashMap guestRoleMap =
+                                                                                    new HashMap();
+                                                                            guestRoleMap.put(
+                                                                                    GRAPHQL_ID_FIELDNAME,
+                                                                                    IDTools.getID());
+                                                                            guestRoleMap.put(
+                                                                                    GRAPHQL_VALUE_FIELDNAME,
+                                                                                    ROLE_GUEST);
+                                                                            guestRoleMap.put(
+                                                                                    GRAPHQL_DESCRIPTION_FIELDNAME,
+                                                                                    ROLE_GUEST);
+                                                                            HashMap defualtRoleMap = new HashMap();
+                                                                            defualtRoleMap.put(GRAPHQL_ID_FIELDNAME,IDTools.getID());
+                                                                            defualtRoleMap.put(GRAPHQL_VALUE_FIELDNAME,ROLE_DEFAULT);
+                                                                            defualtRoleMap.put(GRAPHQL_DESCRIPTION_FIELDNAME,ROLE_DEFAULT);
+                                                                            List roleList = new ArrayList();
+                                                                            roleList.add(adminRoleMap);
+                                                                            roleList.add(guestRoleMap);
+                                                                            roleList.add(defualtRoleMap);
+                                                                            roleEnumAdd
+                                                                                    .fromAdd(
+                                                                                            roleEnumID, roleList, false)
+                                                                                    .whenComplete(
+                                                                                            (roleEnumResult,
+                                                                                             roleEnumEx) -> {
+                                                                                              if (null != roleEnumEx) {
+                                                                                                if (log
+                                                                                                        .isErrorEnabled()) {
+                                                                                                  HashMap errorMap =
+                                                                                                          new HashMap();
+                                                                                                  errorMap.put(
+                                                                                                          GRAPHQL_FROM_ID,
+                                                                                                          roleEnumID);
+                                                                                                  errorMap.put(
+                                                                                                          GRAPHQL_TO_OBJECT,
+                                                                                                          roleList);
+                                                                                                  log.error(
+                                                                                                          "E10068",
+                                                                                                          errorMap,
+                                                                                                          roleEnumEx);
+                                                                                                }
+                                                                                                future
+                                                                                                        .completeExceptionally(
+                                                                                                                new BusinessException(
+                                                                                                                        "E10068"));
+                                                                                              } else {
+                                                                                                future.complete(
+                                                                                                        schemaResult);
+                                                                                              }
+                                                                                            });
+                                                                          } catch (Exception e) {
+                                                                            if (log.isErrorEnabled()) {
+                                                                              HashMap errorMap = new HashMap();
+                                                                              errorMap.putAll(
+                                                                                      thirdAPIInput
+                                                                                              .getRunTimeInfo());
+                                                                              log.error(
+                                                                                      "{}",
+                                                                                      LogData.getErrorLog(
+                                                                                              "E10068", errorMap, e));
+                                                                            }
+                                                                            future.completeExceptionally(
+                                                                                    new BusinessException(
+                                                                                            "E10068"));
+                                                                          }
+                                                                        }
+                                                                      });
+                                                    }
+                                                  });
                                                 }
                                               });
                                     }

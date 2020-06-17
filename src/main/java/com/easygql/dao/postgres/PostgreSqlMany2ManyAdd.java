@@ -32,8 +32,8 @@ public class PostgreSqlMany2ManyAdd implements Many2ManyRelationCreater {
     this.schemaData = schemaData;
     this.schemaID = schemaID;
     this.relationField = relationField;
-    this.fromObject=schemaData.getObjectMetaData().get(relationField.getFromobject());
-    this.toObject = schemaData.getObjectMetaData().get(relationField.getToobject());
+    this.fromObject=schemaData.getObjectMetaData().get(relationField.getFromObject());
+    this.toObject = schemaData.getObjectMetaData().get(relationField.getToObject());
     fromSql =
         " insert into "
             + PostgreSqlSchema.getTableNameofRelation(relationField)

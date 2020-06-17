@@ -26,6 +26,7 @@ public class TriggerSender
     CompletableFuture.runAsync(
         () -> {
           try {
+              System.out.println("trigger sender");
               HttpPost post = null;
               HttpClient httpClient = new DefaultHttpClient();
               // 设置超时时间

@@ -7,13 +7,13 @@ import com.easygql.util.SchemaData;
 import graphql.schema.DataFetchingEnvironment;
 import lombok.NonNull;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.concurrent.CompletableFuture;
 
 import static com.easygql.component.ConfigurationProperties.*;
 import static com.easygql.graphql.datafetcher.DataFetcherCreate.forbiddenFieldsConstruct;
 import static com.easygql.util.AuthorityUtil.updatePermissionFilterBefore;
-import static com.easygql.util.GraphQLUtil.constructSelectionHashMap;
 
 /**
  * @author guofen
@@ -40,10 +40,10 @@ public class DataFetcherUpdateMany implements EasyGQLDataFetcher<Object> {
         tmpdataUpdater.Init(objectName,schemaData,schemaID);
         this.forbiddenFields = new HashMap<>();
         forbiddenFieldsConstruct(schemaData,objectName,forbiddenFields);
-        this.rowConstraints = schemaData.getObjectMetaData().get(objectName).getUpdate_constraints();
+        this.rowConstraints = schemaData.getObjectMetaData().get(objectName).getUpdateConstraints();
         disabledRoles = new HashSet<>();
-        if(null!=schemaData.getObjectMetaData().get(objectName).getUnupdatable_roles()) {
-            disabledRoles.addAll(schemaData.getObjectMetaData().get(objectName).getUnupdatable_roles());
+        if(null!=schemaData.getObjectMetaData().get(objectName).getUnupdatableRoles()) {
+            disabledRoles.addAll(schemaData.getObjectMetaData().get(objectName).getUnupdatableRoles());
         }
         this.dataUpdater=tmpdataUpdater;
     }
@@ -61,7 +61,7 @@ public class DataFetcherUpdateMany implements EasyGQLDataFetcher<Object> {
                     if(null!=permissionEx) {
                         future.completeExceptionally((Throwable) permissionEx);
                     } else {
-                        dataUpdater.updateWhere(finalCondition, updateObj, updateType,constructSelectionHashMap(dataFetchingEnvironment.getSelectionSet())).whenCompleteAsync((it,throwable) ->
+                        dataUpdater.updateWhere(finalCondition, updateObj, updateType).whenCompleteAsync((it,throwable) ->
                         {
                             if(null!=throwable) {
                                 future.completeExceptionally(throwable);

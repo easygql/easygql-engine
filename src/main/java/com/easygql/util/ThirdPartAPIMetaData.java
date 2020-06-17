@@ -12,6 +12,6 @@ import java.util.List;
 @Data
 public class ThirdPartAPIMetaData {
     private  String id;
-    private String apiname;
-    private List<String> disabled_roles = new ArrayList<>();
+    private String apiName;
+    private List<String> disabledRoles = new ArrayList<>();
 }

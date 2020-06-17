@@ -40,8 +40,8 @@ public class DataFetcherDeleteMany implements EasyGQLDataFetcher<Object> {
         this.dataDeleter = DaoFactory.getDeleteDao(schemaData.getDatabasekind());
         this.dataDeleter.Init(objectName,schemaData,schemaID);
         this.disabledRoles = new HashSet<>();
-        this.disabledRoles.addAll(schemaData.getObjectMetaData().get(objectName).getUndeletable_roles());
-        this.rowConstraints = schemaData.getObjectMetaData().get(objectName).getDelete_constraints();
+        this.disabledRoles.addAll(schemaData.getObjectMetaData().get(objectName).getUndeletableRoles());
+        this.rowConstraints = schemaData.getObjectMetaData().get(objectName).getDeleteConstraints();
     }
 
     /**

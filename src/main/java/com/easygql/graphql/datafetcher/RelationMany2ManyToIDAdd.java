@@ -27,8 +27,8 @@ public class RelationMany2ManyToIDAdd implements  EasyGQLDataFetcher<Object> {
         this.schemaData = schemaData;
         this.many2ManyRelationCreater= DaoFactory.getMany2ManyRelationCreator(schemaData.getDatabasekind());
         this.many2ManyRelationCreater.Init(schemaData,schemaID,relationField);
-        if(null!=relationField.getIrrevisible()){
-            disabledRoles.addAll(relationField.getInvisible());
+        if(null!=relationField.getUnmodifiableRoles()){
+            disabledRoles.addAll(relationField.getInvisibleRoles());
         }
     }
 

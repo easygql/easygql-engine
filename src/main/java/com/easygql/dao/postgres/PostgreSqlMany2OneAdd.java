@@ -30,34 +30,34 @@ public class PostgreSqlMany2OneAdd implements Many2OneRelationCreater {
     this.schemaData = schemaData;
     this.schemaID = schemaID;
     this.relationField = relationField;
-    this.fromObject = schemaData.getObjectMetaData().get(relationField.getFromobject());
-    this.toObject = schemaData.getObjectMetaData().get(relationField.getToobject());
+    this.fromObject = schemaData.getObjectMetaData().get(relationField.getFromObject());
+    this.toObject = schemaData.getObjectMetaData().get(relationField.getToObject());
     this.fromSql =
         " update "
-            + schemaData.getObjectMetaData().get(relationField.getFromobject()).getTableName()
+            + schemaData.getObjectMetaData().get(relationField.getFromObject()).getTableName()
             + " set "
             + POSTGRES_COLUMNNAME_PREFIX
-            + relationField.getFromfield()
+            + relationField.getFromField()
             + " = $1  where "
             + POSTGRES_COLUMNNAME_PREFIX
             + POSTGRES_ID_FIELD
             + "=$2 ";
     this.toResetSql =
         " update "
-            + schemaData.getObjectMetaData().get(relationField.getFromobject()).getTableName()
+            + schemaData.getObjectMetaData().get(relationField.getFromObject()).getTableName()
             + " set "
             + POSTGRES_COLUMNNAME_PREFIX
-            + relationField.getFromfield()
+            + relationField.getFromField()
             + " = null where "
             + POSTGRES_COLUMNNAME_PREFIX
-            + relationField.getFromfield()
+            + relationField.getFromField()
             + " = $1 ";
     this.toSql =
         " update  "
-            + schemaData.getObjectMetaData().get(relationField.getFromobject()).getTableName()
+            + schemaData.getObjectMetaData().get(relationField.getFromObject()).getTableName()
             + " set "
             + POSTGRES_COLUMNNAME_PREFIX
-            + relationField.getFromfield()
+            + relationField.getFromField()
             + " =$1 where "
             + POSTGRES_COLUMNNAME_PREFIX
             + POSTGRES_ID_FIELD

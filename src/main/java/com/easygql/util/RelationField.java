@@ -12,13 +12,15 @@ import java.util.List;
 @Data
 public class RelationField {
     private String id;
-    private String relationtype;
-    private List<String> invisible=new ArrayList<>();
-    private List<String> irrevisible =new ArrayList<>();
+    private String relationType;
+    private List<String> invisibleRoles =new ArrayList<>();
+    private List<String> unmodifiableRoles =new ArrayList<>();
     private String description;
-    private String fromobject;
-    private String fromfield;
-    private String toobject;
-    private String tofield;
-    private Boolean ifcascade=false;
+    private String fromObject;
+    private String fromField;
+    private String fromAlias;
+    private String toObject;
+    private String toField;
+    private String toAlias;
+    private Boolean ifCascade =false;
 }

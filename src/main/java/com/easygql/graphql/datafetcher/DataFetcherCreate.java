@@ -13,7 +13,6 @@ import java.util.concurrent.CompletableFuture;
 import static com.easygql.component.ConfigurationProperties.*;
 import static com.easygql.util.AuthorityUtil.insertPermissionFilterBefore;
 import static com.easygql.util.EasyGqlUtil.*;
-import static com.easygql.util.GraphQLUtil.constructSelectionHashMap;
 
 /**
  * @author guofen
@@ -42,7 +41,7 @@ public class DataFetcherCreate  implements EasyGQLDataFetcher<Object> {
         this.schemaData=schemaData;
         this.schemaID=schemaid;
         this.disabledRoles=new HashSet<>();
-        this.disabledRoles.addAll(schemaData.getObjectMetaData().get(objectName).getUninsertable_roles());
+        this.disabledRoles.addAll(schemaData.getObjectMetaData().get(objectName).getUninsertableRoles());
         this.forbiddenFields = new HashMap<>();
         forbiddenFieldsConstruct(schemaData,objectName,forbiddenFields);
         this.lastUpdateFields =getLastUpdateFields(schemaData.getObjectMetaData().get(objectName));
@@ -84,7 +83,7 @@ public class DataFetcherCreate  implements EasyGQLDataFetcher<Object> {
                         future.completeExceptionally(new BusinessException("E10069"));
                         return;
                     }
-                    dataInserter.insertDoc(resultInfo, conflictStrategy,constructSelectionHashMap(dataFetchingEnvironment.getSelectionSet())).whenComplete((it, insertEx) -> {
+                    dataInserter.insertDoc(resultInfo, conflictStrategy).whenComplete((it, insertEx) -> {
                         if (null == insertEx) {
                             future.complete(it);
                         } else {
@@ -123,8 +122,8 @@ public class DataFetcherCreate  implements EasyGQLDataFetcher<Object> {
             String fieldType = entry.getValue();
             if(fieldType.equals(GRAPHQL_SCALARFIELD_TYPENAME)) {
                 ScalarFieldInfo scalarFieldInfo = objectTypeMetaData.getScalarFieldData().get(fieldName);
-                if(null!= scalarFieldInfo.getIrrevisible_roles()) {
-                    for(String roleName: scalarFieldInfo.getIrrevisible_roles()) {
+                if(null!= scalarFieldInfo.getUnmodifiableRoles()) {
+                    for(String roleName: scalarFieldInfo.getUnmodifiableRoles()) {
                         if(null==forbiddenFields.get(roleName)) {
                             forbiddenFields.put(roleName,new HashSet());
                         }
@@ -133,8 +132,8 @@ public class DataFetcherCreate  implements EasyGQLDataFetcher<Object> {
                 }
             } else if(fieldType.equals(GRAPHQL_ENUMTYPE_TYPENAME)) {
                 EnumField enumField = objectTypeMetaData.getEnumFieldData().get(fieldName);
-                if(null!=enumField.getIrrevisible()) {
-                    for(String roleName:enumField.getIrrevisible()) {
+                if(null!=enumField.getUnmodifiableRoles()) {
+                    for(String roleName:enumField.getUnmodifiableRoles()) {
                         if(null==forbiddenFields.get(roleName)) {
                             forbiddenFields.put(roleName,new HashSet());
                         }
@@ -143,22 +142,22 @@ public class DataFetcherCreate  implements EasyGQLDataFetcher<Object> {
                 }
             } else if(fieldType.equals(GRAPHQL_FROMRELATION_TYPENAME)) {
                 RelationField relationField = objectTypeMetaData.getFromRelationFieldData().get(fieldName);
-                if (relationField.getRelationtype().equals(GRAPHQL_MANY2ONE_NAME)) {
-                    for(String roleName:relationField.getIrrevisible()) {
+                if (relationField.getRelationType().equals(GRAPHQL_MANY2ONE_NAME)) {
+                    for(String roleName:relationField.getUnmodifiableRoles()) {
                         if(null==forbiddenFields.get(roleName)) {
                             forbiddenFields.put(roleName,new HashSet());
                         }
-                        forbiddenFields.get(roleName).add(relationField.getFromfield());
+                        forbiddenFields.get(roleName).add(relationField.getFromField());
                     }
                 }
             } else {
                 RelationField relationField = objectTypeMetaData.getToRelationFieldData().get(fieldName);
-                if (relationField.getRelationtype().equals(GRAPHQL_ONE2ONE_NAME)||relationField.getRelationtype().equals(GRAPHQL_ONE2MANY_NAME)) {
-                    for(String roleName:relationField.getIrrevisible()) {
+                if (relationField.getRelationType().equals(GRAPHQL_ONE2ONE_NAME)||relationField.getRelationType().equals(GRAPHQL_ONE2MANY_NAME)) {
+                    for(String roleName:relationField.getUnmodifiableRoles()) {
                         if(null==forbiddenFields.get(roleName)) {
                             forbiddenFields.put(roleName,new HashSet());
                         }
-                        forbiddenFields.get(roleName).add(relationField.getTofield());
+                        forbiddenFields.get(roleName).add(relationField.getToField());
                     }
                 }
             }

@@ -33,62 +33,62 @@ public class PostgreSqlOne2ManyRemover implements One2ManyRelationRemover{
     this.relationField = relationField;
     this.schemaData = schemaData;
     this.schemaID = schemaID;
-    if (relationField.getIfcascade()) {
+    if (relationField.getIfCascade()) {
       this.fromSql1 =
           "delete from  "
-              + schemaData.getObjectMetaData().get(relationField.getToobject()).getTableName()
+              + schemaData.getObjectMetaData().get(relationField.getToObject()).getTableName()
               + " where "
               + POSTGRES_COLUMNNAME_PREFIX
-              + relationField.getTofield()
+              + relationField.getToField()
               + "=$1 and "
               + POSTGRES_COLUMNNAME_PREFIX
               + GRAPHQL_ID_FIELDNAME
               + " = $2 ";
       this.fromSql2 =
           " delete from  "
-              + schemaData.getObjectMetaData().get(relationField.getToobject()).getTableName()
+              + schemaData.getObjectMetaData().get(relationField.getToObject()).getTableName()
               + "  where "
               + POSTGRES_COLUMNNAME_PREFIX
-              + relationField.getTofield()
+              + relationField.getToField()
               + "=$1 ";
     } else {
       this.fromSql1 =
           "update "
-              + schemaData.getObjectMetaData().get(relationField.getToobject()).getTableName()
+              + schemaData.getObjectMetaData().get(relationField.getToObject()).getTableName()
               + " set  "
               + POSTGRES_COLUMNNAME_PREFIX
-              + relationField.getTofield()
+              + relationField.getToField()
               + "= null  where "
               + POSTGRES_COLUMNNAME_PREFIX
-              + relationField.getTofield()
+              + relationField.getToField()
               + "=$1 and "
               + POSTGRES_COLUMNNAME_PREFIX
               + GRAPHQL_ID_FIELDNAME
               + " = $2 ";
       this.fromSql2 =
           "update "
-              + schemaData.getObjectMetaData().get(relationField.getToobject()).getTableName()
+              + schemaData.getObjectMetaData().get(relationField.getToObject()).getTableName()
               + " set  "
               + POSTGRES_COLUMNNAME_PREFIX
-              + relationField.getTofield()
+              + relationField.getToField()
               + "= null  where "
               + POSTGRES_COLUMNNAME_PREFIX
-              + relationField.getTofield()
+              + relationField.getToField()
               + "=$1 ";
     }
 
     this.toSql =
         "update "
-            + schemaData.getObjectMetaData().get(relationField.getToobject()).getTableName()
+            + schemaData.getObjectMetaData().get(relationField.getToObject()).getTableName()
             + " set  "
             + POSTGRES_COLUMNNAME_PREFIX
-            + relationField.getTofield()
+            + relationField.getToField()
             + "= null  where "
             + POSTGRES_COLUMNNAME_PREFIX
             + GRAPHQL_ID_FIELDNAME
             + "=$1 ";
-      this.fromObject=schemaData.getObjectMetaData().get(relationField.getFromobject());
-      this.toObject = schemaData.getObjectMetaData().get(relationField.getToobject());
+      this.fromObject=schemaData.getObjectMetaData().get(relationField.getFromObject());
+      this.toObject = schemaData.getObjectMetaData().get(relationField.getToObject());
   }
 
   @Override

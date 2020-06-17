@@ -27,11 +27,11 @@ public class PostgreSqlMany2OneRemover implements Many2OneRelationRemover{
         this.schemaData=schemaData;
         this.schemaID=schemaID;
         this.relationField=relationField;
-        this.fromSql = "update "+schemaData.getObjectMetaData().get(relationField.getFromobject()).getTableName()+" set  "+POSTGRES_COLUMNNAME_PREFIX+relationField.getFromfield()+"= null  where "+POSTGRES_COLUMNNAME_PREFIX+GRAPHQL_ID_FIELDNAME+"=$1 ";
-        this.toSql1 = "update "+schemaData.getObjectMetaData().get(relationField.getFromobject()).getTableName()+" set  "+POSTGRES_COLUMNNAME_PREFIX+relationField.getFromfield()+"= null  where "+POSTGRES_COLUMNNAME_PREFIX+relationField.getFromfield()+"=$1 and "+POSTGRES_COLUMNNAME_PREFIX+GRAPHQL_ID_FIELDNAME+" = $2 ";
-        this.toSql2 = "update "+schemaData.getObjectMetaData().get(relationField.getFromobject()).getTableName()+" set  "+POSTGRES_COLUMNNAME_PREFIX+relationField.getFromfield()+"= null  where "+POSTGRES_COLUMNNAME_PREFIX+relationField.getFromfield()+"=$1 ";
-        this.fromObject=schemaData.getObjectMetaData().get(relationField.getFromobject());
-        this.toObject = schemaData.getObjectMetaData().get(relationField.getToobject());
+        this.fromSql = "update "+schemaData.getObjectMetaData().get(relationField.getFromObject()).getTableName()+" set  "+POSTGRES_COLUMNNAME_PREFIX+relationField.getFromField()+"= null  where "+POSTGRES_COLUMNNAME_PREFIX+GRAPHQL_ID_FIELDNAME+"=$1 ";
+        this.toSql1 = "update "+schemaData.getObjectMetaData().get(relationField.getFromObject()).getTableName()+" set  "+POSTGRES_COLUMNNAME_PREFIX+relationField.getFromField()+"= null  where "+POSTGRES_COLUMNNAME_PREFIX+relationField.getFromField()+"=$1 and "+POSTGRES_COLUMNNAME_PREFIX+GRAPHQL_ID_FIELDNAME+" = $2 ";
+        this.toSql2 = "update "+schemaData.getObjectMetaData().get(relationField.getFromObject()).getTableName()+" set  "+POSTGRES_COLUMNNAME_PREFIX+relationField.getFromField()+"= null  where "+POSTGRES_COLUMNNAME_PREFIX+relationField.getFromField()+"=$1 ";
+        this.fromObject=schemaData.getObjectMetaData().get(relationField.getFromObject());
+        this.toObject = schemaData.getObjectMetaData().get(relationField.getToObject());
     }
 
     @Override

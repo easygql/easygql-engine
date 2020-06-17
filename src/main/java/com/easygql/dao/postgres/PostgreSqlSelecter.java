@@ -24,6 +24,7 @@ public class PostgreSqlSelecter implements DataSelecter {
   private HashSet<String> disabledRoles;
   private HashMap<String, HashSet> forbiddenFields;
   private String objectName;
+  private ObjectTypeMetaData objectTypeMetaData;
 
   @Override
   public void Init(String objectName, SchemaData schemaData, String schemaID) {
@@ -31,12 +32,12 @@ public class PostgreSqlSelecter implements DataSelecter {
     this.schemaData = schemaData;
     this.schemadid = schemaID;
     this.disabledRoles = new HashSet<>();
-    this.disabledRoles.addAll(schemaData.getObjectMetaData().get(objectName).getUnreadable_roles());
+    this.disabledRoles.addAll(schemaData.getObjectMetaData().get(objectName).getUnreadableRoles());
     this.forbiddenFields = new HashMap<>();
     ObjectTypeMetaData objectTypeMetaData = schemaData.getObjectMetaData().get(objectName);
     for (ScalarFieldInfo scalarFieldInfo : objectTypeMetaData.getScalarFieldData().values()) {
-      if (null != scalarFieldInfo.getInvisible_roles()) {
-        for (String roleName : scalarFieldInfo.getIrrevisible_roles()) {
+      if (null != scalarFieldInfo.getInvisibleRoles()) {
+        for (String roleName : scalarFieldInfo.getUnmodifiableRoles()) {
           if (null == forbiddenFields.get(roleName)) {
             forbiddenFields.put(roleName, new HashSet());
           }
@@ -45,8 +46,8 @@ public class PostgreSqlSelecter implements DataSelecter {
       }
     }
     for (EnumField enumField : objectTypeMetaData.getEnumFieldData().values()) {
-      if (null != enumField.getInvisible()) {
-        for (String roleName : enumField.getInvisible()) {
+      if (null != enumField.getInvisibleRoles()) {
+        for (String roleName : enumField.getInvisibleRoles()) {
           if (null == forbiddenFields.get(roleName)) {
             forbiddenFields.put(roleName, new HashSet());
           }
@@ -55,21 +56,22 @@ public class PostgreSqlSelecter implements DataSelecter {
       }
     }
     for (RelationField relationField : objectTypeMetaData.getFromRelationFieldData().values()) {
-      for (String roleName : relationField.getInvisible()) {
+      for (String roleName : relationField.getInvisibleRoles()) {
         if (null == forbiddenFields.get(roleName)) {
           forbiddenFields.put(roleName, new HashSet());
         }
-        forbiddenFields.get(roleName).add(relationField.getFromfield());
+        forbiddenFields.get(roleName).add(relationField.getFromField());
       }
     }
     for (RelationField relationField : objectTypeMetaData.getToRelationFieldData().values()) {
-      for (String roleName : relationField.getInvisible()) {
+      for (String roleName : relationField.getInvisibleRoles()) {
         if (null == forbiddenFields.get(roleName)) {
           forbiddenFields.put(roleName, new HashSet());
         }
-        forbiddenFields.get(roleName).add(relationField.getTofield());
+        forbiddenFields.get(roleName).add(relationField.getToField());
       }
     }
+    this.objectTypeMetaData= schemaData.getObjectMetaData().get(objectName);
   }
 
   @Override
@@ -81,76 +83,77 @@ public class PostgreSqlSelecter implements DataSelecter {
           try {
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append(
-                    getSelectionField(
-                            selectFields,
-                            schemaData,
-                            objectName,
-                            schemaData.getObjectMetaData().get(objectName).getTableName()));
+                getSelectionField(
+                    selectFields,
+                    schemaData,
+                    objectName,
+                    schemaData.getObjectMetaData().get(objectName).getTableName()));
             String whereClause =
-                    getWhereCondition(HashMap.class.cast(condition), objectName, schemaData);
+                getWhereCondition(HashMap.class.cast(condition), objectName, schemaData);
             if (null != whereClause) {
               stringBuilder
-                      .append(" where ")
-                      .append(POSTGRES_COLUMNNAME_PREFIX)
-                      .append(POSTGRES_ID_FIELD)
-                      .append(" in ( ")
-                      .append(" select ")
-                      .append(POSTGRES_COLUMNNAME_PREFIX)
-                      .append(POSTGRES_ID_FIELD)
-                      .append(" from ");
+                  .append(" where ")
+                  .append(POSTGRES_COLUMNNAME_PREFIX)
+                  .append(POSTGRES_ID_FIELD)
+                  .append(" in ( ")
+                  .append(" select ")
+                  .append(POSTGRES_COLUMNNAME_PREFIX)
+                  .append(POSTGRES_ID_FIELD)
+                  .append(" from ");
               stringBuilder.append(schemaData.getObjectMetaData().get(objectName).getTableName());
               stringBuilder.append(" where ").append(whereClause);
               stringBuilder.append(")");
             }
-            PostgreSQLPoolCache.getConnectionFactory(schemaData.getSchemaid()).whenCompleteAsync((sqlConnection, throwable) -> {
-              if(null!=throwable) {
-                if (log.isErrorEnabled()) {
-                  HashMap errorMap = new HashMap();
-                  errorMap.put(GRAPHQL_FILTER_FILTER_OPERATOR, condition);
-                  log.error(
-                          "{}",
-                          LogData.getErrorLog("E10008", errorMap, throwable));
-                }
-                future.completeExceptionally(new BusinessException("E10008"));
-              } else {
-                sqlConnection.query(
-                        stringBuilder.toString(),
-                        resultHandler -> {
-                          if (resultHandler.succeeded()) {
-                            Iterator<Row> iterator = resultHandler.result().iterator();
-                            if (iterator.hasNext()) {
-                              Row row = iterator.next();
-                              HashMap result = new HashMap();
-                              for (String key : selectFields.keySet()) {
-                                Object tmpObject = row.getValue(key);
-                                if (tmpObject instanceof JsonArray) {
-                                  JsonArray tmpArray = (JsonArray) tmpObject;
-                                  result.put(key, tmpArray.getList());
-                                } else if (tmpObject instanceof JsonObject) {
-                                  JsonObject tmpJsonObject = (JsonObject) tmpObject;
-                                  result.put(key, tmpJsonObject.getMap());
+            PostgreSQLPoolCache.getConnectionFactory(schemaData.getSchemaid())
+                .whenCompleteAsync(
+                    (sqlConnection, throwable) -> {
+                      if (null != throwable) {
+                        if (log.isErrorEnabled()) {
+                          HashMap errorMap = new HashMap();
+                          errorMap.put(GRAPHQL_FILTER_FILTER_OPERATOR, condition);
+                          log.error("{}", LogData.getErrorLog("E10008", errorMap, throwable));
+                        }
+                        future.completeExceptionally(new BusinessException("E10008"));
+                      } else {
+                        sqlConnection.query(
+                            stringBuilder.toString(),
+                            resultHandler -> {
+                              if (resultHandler.succeeded()) {
+                                Iterator<Row> iterator = resultHandler.result().iterator();
+                                if (iterator.hasNext()) {
+                                  Row row = iterator.next();
+                                  HashMap result = new HashMap();
+                                  for (String key : selectFields.keySet()) {
+                                    Object tmpObject = row.getValue(key);
+                                    if (tmpObject instanceof JsonArray) {
+                                      JsonArray tmpArray = (JsonArray) tmpObject;
+                                      result.put(key, tmpArray.getList());
+                                    } else if (tmpObject instanceof JsonObject) {
+                                      JsonObject tmpJsonObject = (JsonObject) tmpObject;
+                                      result.put(key, tmpJsonObject.getMap());
+                                    } else {
+                                      result.put(key,tmpObject);
+                                    }
+                                  }
+                                  future.complete(result);
                                 } else {
-                                  result.put(key, row.getValue(key));
+                                  future.complete(null);
                                 }
-                              }
-                              future.complete(result);
-                            } else {
-                              future.complete(null);
-                            }
-                          } else {
-                            if (log.isErrorEnabled()) {
-                              HashMap errorMap = new HashMap();
-                              errorMap.put(GRAPHQL_FILTER_FILTER_OPERATOR, condition);
-                              log.error(
+                              } else {
+                                if (log.isErrorEnabled()) {
+                                  HashMap errorMap = new HashMap();
+                                  errorMap.put(GRAPHQL_FILTER_FILTER_OPERATOR, condition);
+                                  log.error(
                                       "{}",
-                                      LogData.getErrorLog("E10008", errorMap, resultHandler.cause()));
-                            }
-                            future.completeExceptionally(new BusinessException("E10008"));
-                          }
-                          sqlConnection.close();
-                        });
-              }
-            });
+                                      LogData.getErrorLog(
+                                          "E10008", errorMap, resultHandler.cause()));
+                                }
+                                future.completeExceptionally(new BusinessException("E10008"));
+                              }
+                              sqlConnection.close();
+                            });
+                      }
+                    });
           } catch (Exception e) {
             future.completeExceptionally(e);
           }
@@ -170,7 +173,7 @@ public class PostgreSqlSelecter implements DataSelecter {
         () -> {
           try {
             StringBuilder stringBuilder = new StringBuilder();
-            if(null==selectFields) {
+            if (null == selectFields) {
               System.currentTimeMillis();
             }
             stringBuilder.append(
@@ -230,62 +233,62 @@ public class PostgreSqlSelecter implements DataSelecter {
             if (pagingClause.length() > 1) {
               stringBuilder.append(pagingClause);
             }
-            PostgreSQLPoolCache.getConnectionFactory(schemaData.getSchemaid()).whenCompleteAsync((sqlConnection, throwable) -> {
-              if(null!=throwable) {
-                if (log.isErrorEnabled()) {
-                  HashMap errorMap = new HashMap();
-                  errorMap.put(GRAPHQL_OBJECT_ARGUMENT, inputObj);
-                  errorMap.put(GRAPHQL_SKIP_ARGUMENT, skip);
-                  errorMap.put(GRAPHQL_LIMIT_ARGUMENT, limit);
-                  errorMap.put(GRAPHQL_ORDERBY_ARGUMENT, orderby);
-                  log.error(
-                          "{}",
-                          LogData.getErrorLog(
-                                  "E10008", errorMap, throwable));
-                }
-                future.completeExceptionally(new BusinessException("E10008"));
-              } else {
-                sqlConnection.query(
-                        stringBuilder.toString(),
-                        resultHandler -> {
-                          if (resultHandler.succeeded()) {
-                            Iterator<Row> iterator = resultHandler.result().iterator();
-                            List<Map> resultList = new ArrayList<>();
-                            while (iterator.hasNext()) {
-                              Row row = iterator.next();
-                              HashMap result = new HashMap();
-                              for (String key : selectFields.keySet()) {
-                                Object tmpObject = row.getValue(key);
-                                if (tmpObject instanceof JsonArray) {
-                                  JsonArray tmpArray = (JsonArray) tmpObject;
-                                  result.put(key, tmpArray.getList());
-                                } else if (tmpObject instanceof JsonObject) {
-                                  JsonObject tmpJsonObject = (JsonObject) tmpObject;
-                                  result.put(key, tmpJsonObject.getMap());
-                                } else {
-                                  result.put(key, row.getValue(key));
+            PostgreSQLPoolCache.getConnectionFactory(schemaData.getSchemaid())
+                .whenCompleteAsync(
+                    (sqlConnection, throwable) -> {
+                      if (null != throwable) {
+                        if (log.isErrorEnabled()) {
+                          HashMap errorMap = new HashMap();
+                          errorMap.put(GRAPHQL_OBJECT_ARGUMENT, inputObj);
+                          errorMap.put(GRAPHQL_SKIP_ARGUMENT, skip);
+                          errorMap.put(GRAPHQL_LIMIT_ARGUMENT, limit);
+                          errorMap.put(GRAPHQL_ORDERBY_ARGUMENT, orderby);
+                          log.error("{}", LogData.getErrorLog("E10008", errorMap, throwable));
+                        }
+                        future.completeExceptionally(new BusinessException("E10008"));
+                      } else {
+                        sqlConnection.query(
+                            stringBuilder.toString(),
+                            resultHandler -> {
+                              if (resultHandler.succeeded()) {
+                                Iterator<Row> iterator = resultHandler.result().iterator();
+                                List<Map> resultList = new ArrayList<>();
+                                while (iterator.hasNext()) {
+                                  Row row = iterator.next();
+                                  HashMap result = new HashMap();
+                                  for (String key : selectFields.keySet()) {
+                                    Object tmpObject = row.getValue(key);
+                                    if (tmpObject instanceof JsonArray) {
+                                      JsonArray tmpArray = (JsonArray) tmpObject;
+                                      result.put(key, tmpArray.getList());
+                                    } else if (tmpObject instanceof JsonObject) {
+                                      JsonObject tmpJsonObject = (JsonObject) tmpObject;
+                                      result.put(key, tmpJsonObject.getMap());
+                                    } else {
+                                      result.put(key, row.getValue(key));
+                                    }
+                                  }
+                                  resultList.add(result);
                                 }
-                              }
-                              resultList.add(result);
-                            }
-                            future.complete(resultList);
-                          } else {
-                            if (log.isErrorEnabled()) {
-                              HashMap errorMap = new HashMap();
-                              errorMap.put(GRAPHQL_OBJECT_ARGUMENT, inputObj);
-                              errorMap.put(GRAPHQL_SKIP_ARGUMENT, skip);
-                              errorMap.put(GRAPHQL_LIMIT_ARGUMENT, limit);
-                              errorMap.put(GRAPHQL_ORDERBY_ARGUMENT, orderby);
-                              log.error(
+                                future.complete(resultList);
+                              } else {
+                                if (log.isErrorEnabled()) {
+                                  HashMap errorMap = new HashMap();
+                                  errorMap.put(GRAPHQL_OBJECT_ARGUMENT, inputObj);
+                                  errorMap.put(GRAPHQL_SKIP_ARGUMENT, skip);
+                                  errorMap.put(GRAPHQL_LIMIT_ARGUMENT, limit);
+                                  errorMap.put(GRAPHQL_ORDERBY_ARGUMENT, orderby);
+                                  log.error(
                                       "{}",
-                                      LogData.getErrorLog("E10008", errorMap, resultHandler.cause()));
-                            }
-                            future.completeExceptionally(new BusinessException("E10008"));
-                          }
-                          sqlConnection.close();
-                        });
-              }
-            });
+                                      LogData.getErrorLog(
+                                          "E10008", errorMap, resultHandler.cause()));
+                                }
+                                future.completeExceptionally(new BusinessException("E10008"));
+                              }
+                              sqlConnection.close();
+                            });
+                      }
+                    });
           } catch (Exception e) {
             if (log.isErrorEnabled()) {
               HashMap errorMap = new HashMap();
@@ -372,13 +375,13 @@ public class PostgreSqlSelecter implements DataSelecter {
           if (fieldType.equals(GRAPHQL_FROMRELATION_TYPENAME)) {
             RelationField relationField =
                 objectTypeMetaData.getFromRelationFieldData().get(fieldStr);
-            if (relationField.getRelationtype().equals(GRAPHQL_MANY2MANY_NAME)) {
+            if (relationField.getRelationType().equals(GRAPHQL_MANY2MANY_NAME)) {
               String operator = String.class.cast(operatorIterator.next());
               if (operator.equals(GRAPHQL_FILTER_HASONE_OPERATOR)) {
                 String tmpWhereClause =
                     getWhereCondition(
                         HashMap.class.cast(fieldFinalObj.get(operator)),
-                        relationField.getToobject(),
+                        relationField.getToObject(),
                         schemaData);
                 if (null != tmpWhereClause) {
                   queryStr.append("(");
@@ -400,7 +403,7 @@ public class PostgreSqlSelecter implements DataSelecter {
                   queryStr.append(
                       schemaData
                           .getObjectMetaData()
-                          .get(relationField.getToobject())
+                          .get(relationField.getToObject())
                           .getTableName());
                   queryStr.append(" where ");
                   queryStr.append(tmpWhereClause);
@@ -409,13 +412,13 @@ public class PostgreSqlSelecter implements DataSelecter {
               } else {
                 throw new BusinessException("E10011");
               }
-            } else if (relationField.getRelationtype().equals(GRAPHQL_ONE2MANY_NAME)) {
+            } else if (relationField.getRelationType().equals(GRAPHQL_ONE2MANY_NAME)) {
               String operator = String.class.cast(operatorIterator.next());
               if (operator.equals(GRAPHQL_FILTER_HASONE_OPERATOR)) {
                 String tmpWhereClause =
                     getWhereCondition(
                         HashMap.class.cast(fieldFinalObj.get(operator)),
-                        relationField.getToobject(),
+                        relationField.getToObject(),
                         schemaData);
                 if (null != tmpWhereClause) {
                   queryStr.append("(");
@@ -424,22 +427,22 @@ public class PostgreSqlSelecter implements DataSelecter {
                   queryStr
                       .append(" (select ")
                       .append(POSTGRES_COLUMNNAME_PREFIX)
-                      .append(relationField.getTofield())
+                      .append(relationField.getToField())
                       .append(" from ");
                   queryStr.append(
                       schemaData
                           .getObjectMetaData()
-                          .get(relationField.getToobject())
+                          .get(relationField.getToObject())
                           .getTableName());
                   queryStr.append(" where ");
                   queryStr.append(tmpWhereClause);
                   queryStr.append("))");
                 }
               }
-            } else if (relationField.getRelationtype().equals(GRAPHQL_ONE2ONE_NAME)) {
+            } else if (relationField.getRelationType().equals(GRAPHQL_ONE2ONE_NAME)) {
               String tmpWhereClause =
                   getWhereCondition(
-                      (HashMap) fieldFinalObj, relationField.getToobject(), schemaData);
+                      (HashMap) fieldFinalObj, relationField.getToObject(), schemaData);
               if (null != tmpWhereClause) {
                 queryStr.append("(");
                 queryStr.append(POSTGRES_COLUMNNAME_PREFIX).append(POSTGRES_ID_FIELD);
@@ -448,10 +451,10 @@ public class PostgreSqlSelecter implements DataSelecter {
                 queryStr
                     .append(" (select ")
                     .append(POSTGRES_COLUMNNAME_PREFIX)
-                    .append(relationField.getTofield())
+                    .append(relationField.getToField())
                     .append(" from ");
                 queryStr.append(
-                    schemaData.getObjectMetaData().get(relationField.getToobject()).getTableName());
+                    schemaData.getObjectMetaData().get(relationField.getToObject()).getTableName());
                 queryStr.append(" where ");
                 queryStr.append(tmpWhereClause);
                 queryStr.append(")");
@@ -459,7 +462,7 @@ public class PostgreSqlSelecter implements DataSelecter {
             } else {
               String tmpWhereClause =
                   getWhereCondition(
-                      HashMap.class.cast(fieldFinalObj), relationField.getToobject(), schemaData);
+                      HashMap.class.cast(fieldFinalObj), relationField.getToObject(), schemaData);
               if (null != tmpWhereClause) {
                 queryStr.append("(");
                 queryStr.append(POSTGRES_COLUMNNAME_PREFIX).append(fieldStr);
@@ -471,7 +474,7 @@ public class PostgreSqlSelecter implements DataSelecter {
                     .append(POSTGRES_ID_FIELD)
                     .append(" from ");
                 queryStr.append(
-                    schemaData.getObjectMetaData().get(relationField.getToobject()).getTableName());
+                    schemaData.getObjectMetaData().get(relationField.getToObject()).getTableName());
                 queryStr.append(" where ");
                 queryStr.append(tmpWhereClause);
                 queryStr.append(")");
@@ -480,13 +483,13 @@ public class PostgreSqlSelecter implements DataSelecter {
           } else if (fieldType.equals(GRAPHQL_TORELATION_TYPENAME)) {
             RelationField relationField =
                 objectTypeMetaData.getFromRelationFieldData().get(fieldStr);
-            if (relationField.getRelationtype().equals(GRAPHQL_MANY2MANY_NAME)) {
+            if (relationField.getRelationType().equals(GRAPHQL_MANY2MANY_NAME)) {
               String operator = String.class.cast(operatorIterator.next());
               if (operator.equals(GRAPHQL_FILTER_HASONE_OPERATOR)) {
                 String tmpWhereClause =
                     getWhereCondition(
                         HashMap.class.cast(fieldFinalObj.get(operator)),
-                        relationField.getFromobject(),
+                        relationField.getFromObject(),
                         schemaData);
                 if (null != tmpWhereClause) {
                   queryStr.append("(");
@@ -508,7 +511,7 @@ public class PostgreSqlSelecter implements DataSelecter {
                   queryStr.append(
                       schemaData
                           .getObjectMetaData()
-                          .get(relationField.getFromobject())
+                          .get(relationField.getFromObject())
                           .getTableName());
                   queryStr.append(" where ");
                   queryStr.append(tmpWhereClause);
@@ -517,11 +520,11 @@ public class PostgreSqlSelecter implements DataSelecter {
               } else {
                 throw new BusinessException("E10011");
               }
-            } else if (relationField.getRelationtype().equals(GRAPHQL_ONE2MANY_NAME)
-                || relationField.getRelationtype().equals(GRAPHQL_ONE2ONE_NAME)) {
+            } else if (relationField.getRelationType().equals(GRAPHQL_ONE2MANY_NAME)
+                || relationField.getRelationType().equals(GRAPHQL_ONE2ONE_NAME)) {
               String tmpWhereClause =
                   getWhereCondition(
-                      HashMap.class.cast(fieldFinalObj), relationField.getFromobject(), schemaData);
+                      HashMap.class.cast(fieldFinalObj), relationField.getFromObject(), schemaData);
               if (null != tmpWhereClause) {
                 queryStr.append("(");
                 queryStr.append(POSTGRES_COLUMNNAME_PREFIX).append(fieldStr);
@@ -535,7 +538,7 @@ public class PostgreSqlSelecter implements DataSelecter {
                 queryStr.append(
                     schemaData
                         .getObjectMetaData()
-                        .get(relationField.getFromobject())
+                        .get(relationField.getFromObject())
                         .getTableName());
                 queryStr.append(" where ");
                 queryStr.append(tmpWhereClause);
@@ -544,7 +547,7 @@ public class PostgreSqlSelecter implements DataSelecter {
             } else {
               String tmpWhereClause =
                   getWhereCondition(
-                      HashMap.class.cast(fieldFinalObj), relationField.getFromobject(), schemaData);
+                      HashMap.class.cast(fieldFinalObj), relationField.getFromObject(), schemaData);
               if (null != tmpWhereClause) {
                 queryStr
                     .append("(")
@@ -554,12 +557,12 @@ public class PostgreSqlSelecter implements DataSelecter {
                 queryStr
                     .append(" (select ")
                     .append(POSTGRES_COLUMNNAME_PREFIX)
-                    .append(relationField.getFromfield())
+                    .append(relationField.getFromField())
                     .append(" from ");
                 queryStr.append(
                     schemaData
                         .getObjectMetaData()
-                        .get(relationField.getFromobject())
+                        .get(relationField.getFromObject())
                         .getTableName());
                 queryStr.append(" where ");
                 queryStr.append(tmpWhereClause);
@@ -567,14 +570,14 @@ public class PostgreSqlSelecter implements DataSelecter {
               }
             }
           } else if (fieldType.equals(GRAPHQL_ENUMTYPE_TYPENAME)) {
-            EnumField enumField= objectTypeMetaData.getEnumFieldData().get(fieldStr);
+            EnumField enumField = objectTypeMetaData.getEnumFieldData().get(fieldStr);
             String fieldTypeName = enumField.getType();
             EnumTypeMetaData enumTypeMetaData = schemaData.getEnuminfo().get(fieldTypeName);
             String operator = String.class.cast(operatorIterator.next());
-            if(enumField.isIslist()) {
-              if(operator.equals(GRAPHQL_FILTER_CONTAIN_OPERATOR)) {
-                  queryStr.append(" @> ");
-              } else if(operator.equals(GRAPHQL_FILTER_IN_OPERATOR)) {
+            if (enumField.isList()) {
+              if (operator.equals(GRAPHQL_FILTER_CONTAIN_OPERATOR)) {
+                queryStr.append(" @> ");
+              } else if (operator.equals(GRAPHQL_FILTER_IN_OPERATOR)) {
                 queryStr.append(" <@ ");
               }
               queryStr.append(" in (");
@@ -587,13 +590,13 @@ public class PostgreSqlSelecter implements DataSelecter {
               }
               queryStr.append("))");
             } else {
-              if(operator.equals(GRAPHQL_FILTER_EQ_OPERATOR)) {
+              if (operator.equals(GRAPHQL_FILTER_EQ_OPERATOR)) {
                 queryStr.append(" ").append(POSTGRES_COLUMNNAME_PREFIX).append(fieldStr);
                 queryStr.append(" = '").append(fieldFinalObj.get(operator)).append("'");
-              } else if(operator.equals(GRAPHQL_FILTER_NE_OPERATOR)) {
+              } else if (operator.equals(GRAPHQL_FILTER_NE_OPERATOR)) {
                 queryStr.append(" ").append(POSTGRES_COLUMNNAME_PREFIX).append(fieldStr);
                 queryStr.append(" != '").append(fieldFinalObj.get(operator)).append("'");
-              } else if(operator.equals(GRAPHQL_FILTER_IN_OPERATOR)) {
+              } else if (operator.equals(GRAPHQL_FILTER_IN_OPERATOR)) {
                 queryStr.append(" ").append(POSTGRES_COLUMNNAME_PREFIX).append(fieldStr);
                 List l = List.class.cast(fieldFinalObj.get(operator));
                 queryStr.append(" in (");
@@ -618,7 +621,7 @@ public class PostgreSqlSelecter implements DataSelecter {
                       || fieldTypeName.equals(GRAPHQL_BIGDECIMAL_TYPENAME)
                       || fieldTypeName.equals(GRAPHQL_SHORT_TYPENAME)
                       || fieldTypeName.equals(GRAPHQL_FLOAT_TYPENAME);
-              if (scalarFieldInfo.isIslist()) {
+              if (scalarFieldInfo.isList()) {
                 if (!operator.equals(GRAPHQL_FILTER_HASONE_OPERATOR)) {
                   if (b) {
                     queryStr.append(" ( ");
@@ -851,11 +854,8 @@ public class PostgreSqlSelecter implements DataSelecter {
         selectionStr.append(tableNameAlias);
         selectionStr.append(".");
         selectionStr.append(POSTGRES_COLUMNNAME_PREFIX).append(fieldName);
-        if (objectTypeMetaData.getEnumFieldData().get(fieldName).isIslist()) {
-          selectionStr.append("::json");
-        }
-        selectionStr.append(") as ");
-        selectionStr.append(fieldName);
+        selectionStr.append(") as \"").append(fieldName).append("\" ");
+
       } else if (objectTypeMetaData
           .getFields()
           .get(fieldName)
@@ -865,9 +865,6 @@ public class PostgreSqlSelecter implements DataSelecter {
         selectionStr.append(tableNameAlias);
         selectionStr.append(".");
         selectionStr.append(POSTGRES_COLUMNNAME_PREFIX).append(fieldName);
-        if (scalarFieldInfo.isIslist()) {
-          selectionStr.append("::json");
-        }
         selectionStr.append(") as \"");
         selectionStr.append(fieldName).append("\" ");
       } else if (objectTypeMetaData
@@ -876,10 +873,10 @@ public class PostgreSqlSelecter implements DataSelecter {
           .equals(GRAPHQL_FROMRELATION_TYPENAME)) {
         RelationField relationField = objectTypeMetaData.getFromRelationFieldData().get(fieldName);
         HashMap subFields = HashMap.class.cast(selectFields.get(fieldName));
-        String subTypeName = relationField.getToobject();
+        String subTypeName = relationField.getToObject();
         String subTableNameAlias = tableNameAlias + "_" + fieldName + subTypeName;
-        if (relationField.getRelationtype().equals(GRAPHQL_ONE2ONE_NAME)
-            || relationField.getRelationtype().equals(GRAPHQL_MANY2ONE_NAME)) {
+        if (relationField.getRelationType().equals(GRAPHQL_ONE2ONE_NAME)
+            || relationField.getRelationType().equals(GRAPHQL_MANY2ONE_NAME)) {
           selectionStr.append("(select row_to_json(");
           selectionStr.append(tableNameAlias);
           selectionStr.append("_");
@@ -890,7 +887,7 @@ public class PostgreSqlSelecter implements DataSelecter {
           selectionStr.append(" where  ");
           selectionStr.append(subTableNameAlias);
           selectionStr.append(".");
-          selectionStr.append(POSTGRES_COLUMNNAME_PREFIX).append(relationField.getTofield());
+          selectionStr.append(POSTGRES_COLUMNNAME_PREFIX).append(relationField.getToField());
           selectionStr.append("=");
           selectionStr.append(tableNameAlias);
           selectionStr.append(".");
@@ -901,7 +898,7 @@ public class PostgreSqlSelecter implements DataSelecter {
           selectionStr.append(fieldName);
           selectionStr.append(") as \"");
           selectionStr.append(fieldName).append("\" ");
-        } else if (relationField.getRelationtype().equals(GRAPHQL_ONE2MANY_NAME)) {
+        } else if (relationField.getRelationType().equals(GRAPHQL_ONE2MANY_NAME)) {
           selectionStr.append("(select array_to_json(");
           selectionStr.append("array_agg(");
           selectionStr.append("row_to_json(");
@@ -914,7 +911,7 @@ public class PostgreSqlSelecter implements DataSelecter {
           selectionStr.append(" where  ");
           selectionStr.append(subTableNameAlias);
           selectionStr.append(".");
-          selectionStr.append(POSTGRES_COLUMNNAME_PREFIX).append(relationField.getTofield());
+          selectionStr.append(POSTGRES_COLUMNNAME_PREFIX).append(relationField.getToField());
           selectionStr.append("=");
           selectionStr.append(tableNameAlias);
           selectionStr.append(".");
@@ -961,9 +958,9 @@ public class PostgreSqlSelecter implements DataSelecter {
       } else {
         RelationField relationField = objectTypeMetaData.getToRelationFieldData().get(fieldName);
         HashMap subFields = HashMap.class.cast(selectFields.get(fieldName));
-        String subTypeName = relationField.getFromobject();
+        String subTypeName = relationField.getFromObject();
         String subTableNameAlias = tableNameAlias + "_" + fieldName + subTypeName;
-        if (relationField.getRelationtype().equals(GRAPHQL_ONE2ONE_NAME)) {
+        if (relationField.getRelationType().equals(GRAPHQL_ONE2ONE_NAME)) {
           selectionStr.append("(select row_to_json(");
           selectionStr.append(tableNameAlias);
           selectionStr.append("_");
@@ -974,7 +971,7 @@ public class PostgreSqlSelecter implements DataSelecter {
           selectionStr.append(" where  ");
           selectionStr.append(subTableNameAlias);
           selectionStr.append(".");
-          selectionStr.append(POSTGRES_COLUMNNAME_PREFIX).append(relationField.getFromfield());
+          selectionStr.append(POSTGRES_COLUMNNAME_PREFIX).append(relationField.getFromField());
           selectionStr.append("=");
           selectionStr.append(tableNameAlias);
           selectionStr.append(".");
@@ -985,7 +982,7 @@ public class PostgreSqlSelecter implements DataSelecter {
           selectionStr.append(fieldName);
           selectionStr.append(") as \"");
           selectionStr.append(fieldName).append("\" ");
-        } else if (relationField.getRelationtype().equals(GRAPHQL_ONE2MANY_NAME)) {
+        } else if (relationField.getRelationType().equals(GRAPHQL_ONE2MANY_NAME)) {
           selectionStr.append("(select row_to_json(");
           selectionStr.append(tableNameAlias);
           selectionStr.append("_");
@@ -1007,7 +1004,7 @@ public class PostgreSqlSelecter implements DataSelecter {
           selectionStr.append(fieldName);
           selectionStr.append(") as \"");
           selectionStr.append(fieldName).append("\" ");
-        } else if (relationField.getRelationtype().equals(GRAPHQL_MANY2MANY_NAME)) {
+        } else if (relationField.getRelationType().equals(GRAPHQL_MANY2MANY_NAME)) {
           selectionStr.append("(select array_to_json(");
           selectionStr.append("array_agg(");
           selectionStr.append("row_to_json(");
@@ -1052,7 +1049,7 @@ public class PostgreSqlSelecter implements DataSelecter {
           selectionStr.append(" where  ");
           selectionStr.append(subTableNameAlias);
           selectionStr.append(".");
-          selectionStr.append(POSTGRES_COLUMNNAME_PREFIX).append(relationField.getFromfield());
+          selectionStr.append(POSTGRES_COLUMNNAME_PREFIX).append(relationField.getFromField());
           selectionStr.append("=");
           selectionStr.append(tableNameAlias);
           selectionStr.append(".");

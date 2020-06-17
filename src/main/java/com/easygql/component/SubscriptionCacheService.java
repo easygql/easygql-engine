@@ -636,7 +636,7 @@ public class SubscriptionCacheService implements CacheService {
                 while (operatorIterator.hasNext()) {
                   Map.Entry<String, Object> operatorEntry = operatorIterator.next();
                   String operator = operatorEntry.getKey();
-                  if (scalarFieldInfo.isIslist()) {
+                  if (scalarFieldInfo.isList()) {
                     if (!operator.equals(GRAPHQL_FILTER_HASONE_OPERATOR)) {
                       if (log.isErrorEnabled()) {
                         HashMap errorMap = new HashMap();
@@ -720,7 +720,7 @@ public class SubscriptionCacheService implements CacheService {
                 while (operatorIterator.hasNext()) {
                   Map.Entry<String, Object> operatorEntry = operatorIterator.next();
                   String operator = operatorEntry.getKey();
-                  if (scalarFieldInfo.isIslist()) {
+                  if (scalarFieldInfo.isList()) {
                     if (!operator.equals(GRAPHQL_FILTER_HASONE_OPERATOR)) {
                       if (log.isErrorEnabled()) {
                         HashMap errorMap = new HashMap();
@@ -804,7 +804,7 @@ public class SubscriptionCacheService implements CacheService {
                 while (operatorIterator.hasNext()) {
                   Map.Entry<String, Object> operatorEntry = operatorIterator.next();
                   String operator = operatorEntry.getKey();
-                  if (scalarFieldInfo.isIslist()) {
+                  if (scalarFieldInfo.isList()) {
                     if (!operator.equals(GRAPHQL_FILTER_HASONE_OPERATOR)) {
                       if (log.isErrorEnabled()) {
                         HashMap errorMap = new HashMap();
@@ -895,7 +895,7 @@ public class SubscriptionCacheService implements CacheService {
                 while (operatorIterator.hasNext()) {
                   Map.Entry<String, Object> operatorEntry = operatorIterator.next();
                   String operator = operatorEntry.getKey();
-                  if (scalarFieldInfo.isIslist()) {
+                  if (scalarFieldInfo.isList()) {
                     if (!operator.equals(GRAPHQL_FILTER_HASONE_OPERATOR)) {
                       if (log.isErrorEnabled()) {
                         HashMap errorMap = new HashMap();
@@ -984,7 +984,7 @@ public class SubscriptionCacheService implements CacheService {
                 while (operatorIterator.hasNext()) {
                   Map.Entry<String, Object> operatorEntry = operatorIterator.next();
                   String operator = operatorEntry.getKey();
-                  if (scalarFieldInfo.isIslist()) {
+                  if (scalarFieldInfo.isList()) {
                     if (!operator.equals(GRAPHQL_FILTER_HASONE_OPERATOR)) {
                       if (log.isErrorEnabled()) {
                         HashMap errorMap = new HashMap();
@@ -1074,7 +1074,7 @@ public class SubscriptionCacheService implements CacheService {
                 while (operatorIterator.hasNext()) {
                   Map.Entry<String, Object> operatorEntry = operatorIterator.next();
                   String operator = operatorEntry.getKey();
-                  if (scalarFieldInfo.isIslist()) {
+                  if (scalarFieldInfo.isList()) {
                     if (!operator.equals(GRAPHQL_FILTER_HASONE_OPERATOR)) {
                       if (log.isErrorEnabled()) {
                         HashMap errorMap = new HashMap();
@@ -1182,7 +1182,7 @@ public class SubscriptionCacheService implements CacheService {
               while (operatorIterator.hasNext()) {
                 Map.Entry<String, Object> operatorEntry = operatorIterator.next();
                 String operator = operatorEntry.getKey();
-                if (enumField.isIslist()) {
+                if (enumField.isList()) {
                   if (operator.equals(GRAPHQL_FILTER_CONTAIN_OPERATOR)
                       || operator.equals(GRAPHQL_FILTER_IN_OPERATOR)) {
                     List<String> fieldValue = ArrayList.class.cast(changeEvent.get(fieldName));

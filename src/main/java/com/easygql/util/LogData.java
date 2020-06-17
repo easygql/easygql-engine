@@ -6,6 +6,7 @@ import io.vertx.core.impl.StringEscapeUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.context.MessageSource;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,7 +25,12 @@ public class LogData {
     HashMap logData = new HashMap();
     logData.put("detail", detail);
     logData.put("logType", logType);
-    logData.put("errorInfo", ExceptionUtils.getStackTrace(throwable));
+    if(null!=throwable) {
+      logData.put("errorInfo", ExceptionUtils.getStackTrace(throwable));
+    } else {
+      System.out.println("xxxx");
+    }
+
     logData.put(
         "message",
         messageSource.getMessage(

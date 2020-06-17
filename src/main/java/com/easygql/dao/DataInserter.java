@@ -11,5 +11,5 @@ import java.util.concurrent.CompletableFuture;
  */
 public interface DataInserter {
      void Init(String objectName, SchemaData schemaData,String schemaID);
-     CompletableFuture<HashMap> insertDoc(HashMap<String,HashMap> doc, String conflictStrategy,HashMap<String,Object> selectionFields );
+     CompletableFuture<HashMap> insertDoc(HashMap<String,HashMap> doc, String conflictStrategy);
 }

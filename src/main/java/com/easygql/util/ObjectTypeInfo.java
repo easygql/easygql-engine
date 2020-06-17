@@ -3,7 +3,6 @@ package com.easygql.util;
 import lombok.Data;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -14,15 +13,16 @@ import java.util.List;
 public class ObjectTypeInfo {
   private String id;
   private String name;
-  private List<ScalarFieldInfo> scalarfields = new ArrayList<>();
-  private List<EnumField> enumfields = new ArrayList();
-  private List<String> unreadable_roles = new ArrayList<>();
-  private List<String> uninsertable_roles = new ArrayList<>();
-  private List<String> undeletable_roles = new ArrayList<>();
-  private List<String> unupdatable_roles = new ArrayList<>();
-  private Object read_constraints;
-  private Object update_constraints;
-  private Object delete_constraints;
-  private List<UniqueConstraint> unique_constraints = new ArrayList<>();
+  private String alias;
+  private List<ScalarFieldInfo> scalarFields = new ArrayList<>();
+  private List<EnumField> enumFields = new ArrayList();
+  private List<String> unreadableRoles = new ArrayList<>();
+  private List<String> uninsertableRoles = new ArrayList<>();
+  private List<String> undeletableRoles = new ArrayList<>();
+  private List<String> unupdatableRoles = new ArrayList<>();
+  private Object readConstraints;
+  private Object updateConstraints;
+  private Object deleteConstraints;
+  private List<UniqueConstraint> uniqueConstraints = new ArrayList<>();
   private String description;
 }

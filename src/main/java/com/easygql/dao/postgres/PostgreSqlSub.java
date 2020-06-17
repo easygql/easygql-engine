@@ -301,13 +301,13 @@ public class PostgreSqlSub implements DataSub {
       selectFields.addAll(objectTypeMetaData.getScalarFieldData().keySet());
       selectFields.addAll(objectTypeMetaData.getEnumFieldData().keySet());
       for (RelationField relationField : objectTypeMetaData.getFromRelationFieldData().values()) {
-              if(relationField.getRelationtype().equals(GRAPHQL_MANY2ONE_NAME)) {
-                  selectFields.add(relationField.getFromfield());
+              if(relationField.getRelationType().equals(GRAPHQL_MANY2ONE_NAME)) {
+                  selectFields.add(relationField.getFromField());
               }
       }
       for (RelationField relationField:objectTypeMetaData.getToRelationFieldData().values()) {
-          if(relationField.getRelationtype().equals(GRAPHQL_ONE2MANY_NAME)||relationField.getRelationtype().equals(GRAPHQL_ONE2ONE_NAME)) {
-          selectFields.add(relationField.getTofield());
+          if(relationField.getRelationType().equals(GRAPHQL_ONE2MANY_NAME)||relationField.getRelationType().equals(GRAPHQL_ONE2ONE_NAME)) {
+          selectFields.add(relationField.getToField());
           }
       }
 
@@ -317,8 +317,9 @@ public class PostgreSqlSub implements DataSub {
       if (fieldType.equals(GRAPHQL_SCALARFIELD_TYPENAME)) {
         ScalarFieldInfo scalarFieldInfo = objectTypeMetaData.getScalarFieldData().get(fieldName);
         String sqlType = null;
-        if (scalarFieldInfo.isIslist()) {
-          sqlType = TypeMapping.getTypeName(DATABASE_KIND_POSTGRES, GRAPHQL_JSON_TYPENAME);
+        if (scalarFieldInfo.isList()) {
+            sqlType = TypeMapping.getTypeName(DATABASE_KIND_POSTGRES, scalarFieldInfo.getType());
+            sqlType+="[] ";
         } else {
           sqlType = TypeMapping.getTypeName(DATABASE_KIND_POSTGRES, scalarFieldInfo.getType());
         }
@@ -351,8 +352,10 @@ public class PostgreSqlSub implements DataSub {
             if (fieldType.equals(GRAPHQL_SCALARFIELD_TYPENAME)) {
               ScalarFieldInfo scalarFieldInfo = objectTypeMetaData.getScalarFieldData().get(str);
               String sqlType = null;
-              if (scalarFieldInfo.isIslist()) {
-                sqlType = TypeMapping.getTypeName(DATABASE_KIND_POSTGRES, GRAPHQL_JSON_TYPENAME);
+              if (scalarFieldInfo.isList()) {
+                  sqlType =
+                          TypeMapping.getTypeName(DATABASE_KIND_POSTGRES, scalarFieldInfo.getType());
+                  sqlType+="[] ";
               } else {
                 sqlType =
                     TypeMapping.getTypeName(DATABASE_KIND_POSTGRES, scalarFieldInfo.getType());
@@ -379,7 +382,7 @@ public class PostgreSqlSub implements DataSub {
 
             } else if(fieldType.equals(GRAPHQL_ENUMFIELD_TYPENAME)) {
               EnumField enumField = objectTypeMetaData.getEnumFieldData().get(str);
-              if (enumField.isIslist()) {
+              if (enumField.isList()) {
                 keys.add(
                     " OLD."
                         + POSTGRES_COLUMNNAME_PREFIX

@@ -4,7 +4,10 @@ import com.easygql.dao.*;
 import com.easygql.exception.BusinessException;
 import lombok.NonNull;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+
 /**
  * @author guofen
  * @date 2019/12/18 19:29
@@ -136,5 +139,10 @@ public class DaoFactory {
     } else {
       throw new BusinessException("E10047");
     }
+  }
+  public static List<String> supportedDataBase(){
+    List<String> suporrtedDB = new ArrayList<>();
+    suporrtedDB.addAll(daoGeneratorHashMap.keySet());
+    return  suporrtedDB;
   }
 }

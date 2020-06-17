@@ -2,7 +2,6 @@ package com.easygql.dao;
 
 import com.easygql.util.SchemaData;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 /**
@@ -12,5 +11,5 @@ import java.util.concurrent.CompletableFuture;
 
 public interface DataUpdater {
     void Init(String objectName, SchemaData schemaData,String schemaID);
-    CompletableFuture<Map> updateWhere(Object whereInput, Object updateObject, String updateType, HashMap<String,Object> selectionFields);
+    CompletableFuture<Map> updateWhere(Object whereInput, Object updateObject, String updateType);
 }

@@ -3,14 +3,14 @@ package com.easygql.graphql.datafetcher;
 import com.easygql.component.ConfigurationProperties;
 import com.easygql.exception.NotAuthorizedException;
 import com.easygql.thirdapis.ThirdAPI;
-import com.easygql.util.*;
+import com.easygql.util.AuthorityUtil;
+import com.easygql.util.SchemaData;
+import com.easygql.util.ThirdAPIInput;
+import com.easygql.util.ThirdAPIPool;
 import graphql.schema.DataFetchingEnvironment;
 
-import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * @author guofen
@@ -60,6 +60,7 @@ public class DataFetcherThirdAPI implements EasyGQLDataFetcher<Object> {
             thirdAPIInput.setSchemaID(schemaID);
             thirdAPIInput.setRunTimeInfo(inputRunTime);
             thirdAPIInput.setSchemaData(schemaData);
+            thirdAPIInput.setUserInfo(userInfo);
             return thirdAPI.doWork(thirdAPIInput);
         }
 

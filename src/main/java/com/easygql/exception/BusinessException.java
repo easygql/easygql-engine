@@ -13,6 +13,9 @@ public class BusinessException  extends  RuntimeException {
     public BusinessException(String errorCode) {
         super(LogData.getErrorMessage(errorCode));
         this.errorCode =errorCode;
-
+    }
+    public BusinessException(String errorCode,String message) {
+        super(message);
+        this.errorCode =errorCode;
     }
 }

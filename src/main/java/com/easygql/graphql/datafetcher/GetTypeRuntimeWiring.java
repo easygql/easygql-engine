@@ -167,6 +167,9 @@ public class GetTypeRuntimeWiring {
             String parentName = typeDefinition.getName();
             FieldDefinition fieldDefinition = environment.getFieldDefinition();
             String fieldName = fieldDefinition.getName();
+            if(fieldName.equals(GRAPHQL_USERLOGIN_APINAME)||fieldName.equals(GRAPHQL_PASSWORDCHANGE_APINAME)||fieldName.equals(GRAPHQL_PASSWORDRESET_APINAME)) {
+              return new DataFetcherThirdAPI(schemaData,schemaid,fieldName);
+            }
             if (GRAPHQL_QUERY_TYPENAME.equals(parentName)) {
               APIMetaData apiMetaData = schemaData.getQueryMetaData().get(fieldName);
               switch (apiMetaData.getApikind()) {
@@ -186,7 +189,7 @@ public class GetTypeRuntimeWiring {
                   ThirdPartAPIMetaData thirdPartAPIMetaData =
                       JSONObject.parseObject(thirdApiStr, ThirdPartAPIMetaData.class);
                   return new DataFetcherThirdAPI(
-                      schemaData, schemaid, thirdPartAPIMetaData.getApiname());
+                      schemaData, schemaid, thirdPartAPIMetaData.getApiName());
                 default:
                   return null;
               }
@@ -221,11 +224,11 @@ public class GetTypeRuntimeWiring {
                             .get(fromIDObject)
                             .getFromRelationFieldData()
                             .get(fromIDField);
-                    if (fromIDrelation.getRelationtype().equals(GRAPHQL_MANY2MANY_NAME)) {
+                    if (fromIDrelation.getRelationType().equals(GRAPHQL_MANY2MANY_NAME)) {
                       return new RelationMany2ManyFromIDAdd(fromIDrelation, schemaid, schemaData);
-                    } else if (fromIDrelation.getRelationtype().equals(GRAPHQL_MANY2ONE_NAME)) {
+                    } else if (fromIDrelation.getRelationType().equals(GRAPHQL_MANY2ONE_NAME)) {
                       return new RelationMany2OneFromIDAdd(fromIDrelation, schemaid, schemaData);
-                    } else if (fromIDrelation.getRelationtype().equals(GRAPHQL_ONE2MANY_NAME)) {
+                    } else if (fromIDrelation.getRelationType().equals(GRAPHQL_ONE2MANY_NAME)) {
                       return new RelationOne2ManyFromIDAdd(fromIDrelation, schemaid, schemaData);
                     } else {
                       return new RelationOne2OneFromIDAdd(fromIDrelation, schemaid, schemaData);
@@ -250,11 +253,11 @@ public class GetTypeRuntimeWiring {
                             .get(toIDObject)
                             .getToRelationFieldData()
                             .get(toIDField);
-                    if (toIDRelation.getRelationtype().equals(GRAPHQL_MANY2MANY_NAME)) {
+                    if (toIDRelation.getRelationType().equals(GRAPHQL_MANY2MANY_NAME)) {
                       return new RelationMany2ManyToIDAdd(toIDRelation, schemaid, schemaData);
-                    } else if (toIDRelation.getRelationtype().equals(GRAPHQL_MANY2ONE_NAME)) {
+                    } else if (toIDRelation.getRelationType().equals(GRAPHQL_MANY2ONE_NAME)) {
                       return new RelationMany2OneToIDAdd(toIDRelation, schemaid, schemaData);
-                    } else if (toIDRelation.getRelationtype().equals(GRAPHQL_ONE2MANY_NAME)) {
+                    } else if (toIDRelation.getRelationType().equals(GRAPHQL_ONE2MANY_NAME)) {
                       return new RelationOne2ManyToIDAdd(toIDRelation, schemaid, schemaData);
                     } else {
                       return new RelationOne2OneToIDAdd(toIDRelation, schemaid, schemaData);
@@ -281,11 +284,11 @@ public class GetTypeRuntimeWiring {
                             .get(fromObjectObject)
                             .getFromRelationFieldData()
                             .get(fromObjectField);
-                    if (fromObjectRelation.getRelationtype().equals(GRAPHQL_MANY2MANY_NAME)) {
+                    if (fromObjectRelation.getRelationType().equals(GRAPHQL_MANY2MANY_NAME)) {
                       return null;
-                    } else if (fromObjectRelation.getRelationtype().equals(GRAPHQL_MANY2ONE_NAME)) {
+                    } else if (fromObjectRelation.getRelationType().equals(GRAPHQL_MANY2ONE_NAME)) {
                       return null;
-                    } else if (fromObjectRelation.getRelationtype().equals(GRAPHQL_ONE2MANY_NAME)) {
+                    } else if (fromObjectRelation.getRelationType().equals(GRAPHQL_ONE2MANY_NAME)) {
                       return new RelationOne2ManyFromAdd(fromObjectRelation, schemaid, schemaData);
                     } else {
                       return new RelationOne2OneFromAdd(fromObjectRelation, schemaid, schemaData);
@@ -312,17 +315,17 @@ public class GetTypeRuntimeWiring {
                             .get(fromRemoveObject)
                             .getFromRelationFieldData()
                             .get(fromRemoveField);
-                    if (fromRemoveRelation.getFromobject().equals(fromRemoveObject)) {
-                      if (fromRemoveRelation.getRelationtype().equals(GRAPHQL_MANY2MANY_NAME)) {
+                    if (fromRemoveRelation.getFromObject().equals(fromRemoveObject)) {
+                      if (fromRemoveRelation.getRelationType().equals(GRAPHQL_MANY2MANY_NAME)) {
                         return new RelationMany2ManyFromRemover(
                             fromRemoveRelation, schemaid, schemaData);
                       } else if (fromRemoveRelation
-                          .getRelationtype()
+                          .getRelationType()
                           .equals(GRAPHQL_MANY2ONE_NAME)) {
                         return new RelationMany2OneFromRemover(
                             fromRemoveRelation, schemaid, schemaData);
                       } else if (fromRemoveRelation
-                          .getRelationtype()
+                          .getRelationType()
                           .equals(GRAPHQL_ONE2MANY_NAME)) {
                         return new RelationOne2ManyFromRemover(
                             fromRemoveRelation, schemaid, schemaData);
@@ -351,14 +354,14 @@ public class GetTypeRuntimeWiring {
                             .get(toRemoveObject)
                             .getToRelationFieldData()
                             .get(toRemoveField);
-                    if (toRemoveRelation.getFromobject().equals(toRemoveObject)) {
-                      if (toRemoveRelation.getRelationtype().equals(GRAPHQL_MANY2MANY_NAME)) {
+                    if (toRemoveRelation.getFromObject().equals(toRemoveObject)) {
+                      if (toRemoveRelation.getRelationType().equals(GRAPHQL_MANY2MANY_NAME)) {
                         return new RelationMany2ManyFromRemover(
                             toRemoveRelation, schemaid, schemaData);
-                      } else if (toRemoveRelation.getRelationtype().equals(GRAPHQL_MANY2ONE_NAME)) {
+                      } else if (toRemoveRelation.getRelationType().equals(GRAPHQL_MANY2ONE_NAME)) {
                         return new RelationMany2OneFromRemover(
                             toRemoveRelation, schemaid, schemaData);
-                      } else if (toRemoveRelation.getRelationtype().equals(GRAPHQL_ONE2MANY_NAME)) {
+                      } else if (toRemoveRelation.getRelationType().equals(GRAPHQL_ONE2MANY_NAME)) {
                         return new RelationOne2ManyFromRemover(
                             toRemoveRelation, schemaid, schemaData);
                       } else {
@@ -378,7 +381,7 @@ public class GetTypeRuntimeWiring {
                   ThirdPartAPIMetaData thirdPartAPIMetaData =
                       JSONObject.parseObject(thirdApiStr, ThirdPartAPIMetaData.class);
                   return new DataFetcherThirdAPI(
-                      schemaData, schemaid, thirdPartAPIMetaData.getApiname());
+                      schemaData, schemaid, thirdPartAPIMetaData.getApiName());
                 default:
                   return null;
               }
@@ -397,7 +400,7 @@ public class GetTypeRuntimeWiring {
                   ThirdPartAPIMetaData thirdPartAPIMetaData =
                       JSONObject.parseObject(thirdApiStr, ThirdPartAPIMetaData.class);
                   return new DataFetcherThirdAPI(
-                      schemaData, schemaid, thirdPartAPIMetaData.getApiname());
+                      schemaData, schemaid, thirdPartAPIMetaData.getApiName());
                 default:
                   return null;
               }

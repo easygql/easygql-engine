@@ -14,10 +14,12 @@ public class EnumField {
     private String id;
     private String name;
     private String type;
-    private boolean islist;
-    private boolean notnull;
-    private List<String> invisible=new ArrayList<>();
-    private List<String> irrevisible =new ArrayList<>();
+    private boolean isList;
+    private boolean notNull;
+    private List<String> invisibleRoles =new ArrayList<>();
+    private List<String> unmodifiableRoles =new ArrayList<>();
     private String description;
-    private Object defaultvalue;
+    private Object defaultValue;
+    private String alias;
+
 }

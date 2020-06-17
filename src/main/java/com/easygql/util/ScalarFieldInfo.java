@@ -13,12 +13,13 @@ import java.util.List;
 public class ScalarFieldInfo {
     private String id;
     private String name;
-    private boolean notnull;
-    private String fieldkind;//UserDefined，SystemDefined
-    private boolean  islist ;
+    private boolean notNull;
+    private String fieldKind;//UserDefined，SystemDefined
+    private boolean isList;
     private String type;
-    private List<String> invisible_roles=new ArrayList<>();
-    private List<String> irrevisible_roles =new ArrayList<>();
+    private List<String> invisibleRoles =new ArrayList<>();
+    private List<String> unmodifiableRoles =new ArrayList<>();
     private String description;
-    private String defaultValue=null;
+    private String alias;
+    private Object defaultValue=null;
 }

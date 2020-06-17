@@ -24,8 +24,8 @@ public class RelationOne2OneFromRemover implements  EasyGQLDataFetcher<Object> {
         this.schemaData = schemaData;
         this.one2OneRemover = DaoFactory.getOne2OneRelationRemover(schemaData.getDatabasekind());
         this.one2OneRemover.Init(schemaData,schemaID,relationField);
-        if(null!=relationField.getIrrevisible()){
-            disabledRoles.addAll(relationField.getInvisible());
+        if(null!=relationField.getUnmodifiableRoles()){
+            disabledRoles.addAll(relationField.getInvisibleRoles());
         }
     }
 

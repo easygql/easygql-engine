@@ -27,36 +27,36 @@ public class PostgreSqlOne2OneRemover implements One2OneRelationRemover {
     this.schemaData = schemaData;
     this.schemaID = schemaID;
     this.relationField = relationField;
-    if (relationField.getIfcascade()) {
+    if (relationField.getIfCascade()) {
       this.fromSql =
           " delete from   "
-              + schemaData.getObjectMetaData().get(relationField.getToobject())
+              + schemaData.getObjectMetaData().get(relationField.getToObject())
               + "where "
               + POSTGRES_COLUMNNAME_PREFIX
-              + relationField.getTofield()
+              + relationField.getToField()
               + "= $1 ";
     } else {
       this.fromSql =
           " update  "
-              + schemaData.getObjectMetaData().get(relationField.getToobject())
+              + schemaData.getObjectMetaData().get(relationField.getToObject())
               + " set "
               + POSTGRES_COLUMNNAME_PREFIX
-              + relationField.getTofield()
+              + relationField.getToField()
               + "=null where "
               + POSTGRES_COLUMNNAME_PREFIX
-              + relationField.getTofield()
+              + relationField.getToField()
               + "= $1 ";
     }
 
     this.toSql =
         " delete from   "
-            + schemaData.getObjectMetaData().get(relationField.getToobject())
+            + schemaData.getObjectMetaData().get(relationField.getToObject())
             + " where "
             + POSTGRES_COLUMNNAME_PREFIX
             + POSTGRES_ID_FIELD
             + "= $1 ";
-      this.fromObject=schemaData.getObjectMetaData().get(relationField.getFromobject());
-      this.toObject = schemaData.getObjectMetaData().get(relationField.getToobject());
+      this.fromObject=schemaData.getObjectMetaData().get(relationField.getFromObject());
+      this.toObject = schemaData.getObjectMetaData().get(relationField.getToObject());
   }
 
   @Override

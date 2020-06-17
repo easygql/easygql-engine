@@ -33,11 +33,11 @@ public class RelationOne2OneFromAdd implements  EasyGQLDataFetcher<Object> {
         this.one2OneRelationCreater = DaoFactory.getOne2OneRelationCreator(schemaData.getDatabasekind());
         this.one2OneRelationCreater.Init(schemaData,schemaID,relationField);
         this.disabledRoles=new HashSet<>();
-        this.disabledRoles.addAll(schemaData.getObjectMetaData().get(relationField.getToobject()).getUninsertable_roles());
+        this.disabledRoles.addAll(schemaData.getObjectMetaData().get(relationField.getToObject()).getUninsertableRoles());
         this.forbiddenFields = new HashMap<>();
-        DataFetcherCreate.forbiddenFieldsConstruct(schemaData,relationField.getToobject(),forbiddenFields);
-        this.lastUpdateFields =getLastUpdateFields(schemaData.getObjectMetaData().get(relationField.getToobject()));
-        this.createdAtFields =getCreateAtFields(schemaData.getObjectMetaData().get(relationField.getToobject()));
+        DataFetcherCreate.forbiddenFieldsConstruct(schemaData,relationField.getToObject(),forbiddenFields);
+        this.lastUpdateFields =getLastUpdateFields(schemaData.getObjectMetaData().get(relationField.getToObject()));
+        this.createdAtFields =getCreateAtFields(schemaData.getObjectMetaData().get(relationField.getToObject()));
     }
 
     @Override
